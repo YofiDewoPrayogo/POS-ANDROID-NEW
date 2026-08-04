@@ -92,6 +92,11 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
             isTrialExpired.value = false
             trialTransactionsLeft.value = 999999
             storeLicense.value = key
+            val tier = repository.getLicenseTier()
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            viewModelScope.launch {
+                FirebaseSyncManager.updateOutletMetadata(outletCode.value, licenseType = tier, activationDate = today)
+            }
         }
         return success
     }

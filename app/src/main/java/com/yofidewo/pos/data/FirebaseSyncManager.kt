@@ -39,7 +39,10 @@ object FirebaseSyncManager {
                 "name": "$name",
                 "address": "$address",
                 "phone": "$phone",
-                "createdAt": ${System.currentTimeMillis()}
+                "createdAt": ${System.currentTimeMillis()},
+                "licenseType": "FREE TRIAL",
+                "activationDate": "-",
+                "txCount": 0
             }
         """.trimIndent()
 
@@ -53,8 +56,28 @@ object FirebaseSyncManager {
         } catch (e: Exception) {
             Log.e(TAG, "Cloud sync notice for outlet $code: ${e.message}")
         }
-        // Always return true locally so Owner gets Kode Outlet & QR Code immediately
         true
+    }
+
+    suspend fun updateOutletMetadata(code: String, licenseType: String? = null, activationDate: String? = null, txCount: Int? = null) = withContext(Dispatchers.IO) {
+        if (code.isBlank()) return@withContext
+        val patches = mutableListOf<String>()
+        if (licenseType != null) patches.add("\"licenseType\": \"$licenseType\"")
+        if (activationDate != null) patches.add("\"activationDate\": \"$activationDate\"")
+        if (txCount != null) patches.add("\"txCount\": $txCount")
+        if (patches.isEmpty()) return@withContext
+
+        val patchJson = "{ ${patches.joinToString(", ")} }"
+        val request = Request.Builder()
+            .url("$firebaseUrl/outlets/$code/profile.json")
+            .patch(patchJson.toRequestBody(jsonMediaType))
+            .build()
+
+        try {
+            client.newCall(request).execute().close()
+        } catch (e: Exception) {
+            Log.e(TAG, "Notice updating outlet metadata $code: ${e.message}")
+        }
     }
 
     suspend fun checkOutletExists(code: String): Boolean = withContext(Dispatchers.IO) {

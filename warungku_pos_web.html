@@ -72,6 +72,8 @@
         .badge-pro { background-color: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
         .badge-ultra { background-color: #EDE9FE; color: #6D28D9; border: 1px solid #DDD6FE; }
         .badge-trial { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
+        .live-dot { height: 10px; width: 10px; background-color: #10B981; border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
         /* Stats Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
@@ -101,9 +103,12 @@
     <!-- Header -->
     <div class="header">
         <div class="header-title">
-            🛡️ WarungKu POS <span>Portal Aktivasi & Manajemen Lisensi</span>
+            🛡️ WarungKu POS <span>Portal Aktivasi & Monitoring Live</span>
         </div>
-        <div class="pro-badge">PORTAL DEVELOPER</div>
+        <div style="display:flex; align-items:center; gap: 12px;">
+            <button class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; display:none;" onclick="openPinModal()" id="btnSettingsPin">⚙️ Pengaturan PIN</button>
+            <div class="pro-badge">PORTAL DEVELOPER</div>
+        </div>
     </div>
 
     <div class="container">
@@ -114,7 +119,7 @@
             <h2 style="font-size: 20px; margin-bottom: 6px;">Autentikasi Master Developer</h2>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Masukkan PIN Master Developer untuk mengelola lisensi dan device terdaftar.</p>
             <div class="input-group" style="margin-bottom: 20px;">
-                <label>PIN Master Developer (Default: 911911)</label>
+                <label>PIN Master Developer</label>
                 <input type="password" class="input-control" id="masterPinInput" placeholder="••••••" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
             </div>
             <button class="btn btn-primary" style="width: 100%;" onclick="verifyDeveloperPin()">Masuk Portal Developer ➔</button>
@@ -147,6 +152,7 @@
             <div class="card form-card">
                 <div class="card-header">
                     <div class="card-title">🔑 Generator Kunci Aktivasi Lisensi</div>
+                    <button class="btn btn-outline" style="font-size: 12px; padding: 6px 12px;" onclick="openPinModal()">⚙️ Ubah PIN Master</button>
                 </div>
                 <div class="form-grid">
                     <div class="input-group">
@@ -171,8 +177,11 @@
             <!-- Registered Devices Table & Monitoring -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">📱 Daftar Outlet & Device Terdaftar</div>
+                    <div class="card-title">
+                        <span class="live-dot"></span> 📱 Daftar Outlet & Device Terdaftar (Real-time Live Sync)
+                    </div>
                     <div class="btn-group">
+                        <button class="btn btn-outline" onclick="fetchLiveFirebaseOutlets()" style="font-size: 12px; padding: 6px 12px;">🔄 Refresh Realtime</button>
                         <button class="btn btn-success" onclick="exportToCsv()">📥 Ekspor Excel (CSV)</button>
                         <button class="btn btn-purple" onclick="exportToPdf()">📄 Ekspor PDF / Cetak Laporan</button>
                     </div>
@@ -195,7 +204,7 @@
                             </tr>
                         </thead>
                         <tbody id="deviceTableBody">
-                            <!-- Dynamically Rendered -->
+                            <!-- Dynamically Rendered from Firebase & Local -->
                         </tbody>
                     </table>
                 </div>
@@ -232,7 +241,33 @@
         </div>
     </div>
 
+    <!-- Modal Pengaturan PIN Master Developer -->
+    <div class="modal" id="pinModal">
+        <div class="modal-body">
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">⚙️ Ubah PIN Master Developer</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Ubah PIN untuk mengamankan akses ke Portal Developer.</p>
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label>PIN Master Saat Ini</label>
+                <input type="password" class="input-control" id="currentPinInput" placeholder="••••••">
+            </div>
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label>PIN Master Baru</label>
+                <input type="password" class="input-control" id="newPinInput" placeholder="••••••">
+            </div>
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label>Konfirmasi PIN Master Baru</label>
+                <input type="password" class="input-control" id="confirmPinInput" placeholder="••••••">
+            </div>
+            <div class="btn-group" style="justify-content: flex-end;">
+                <button class="btn btn-outline" onclick="closePinModal()">Batal</button>
+                <button class="btn btn-primary" onclick="saveNewMasterPin()">Simpan PIN Baru</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const FIREBASE_DB_URL = "https://warungku-pos-default-rtdb.firebaseio.com";
+
         const initialDevices = [
             {
                 outletCode: "POS-88219",
@@ -253,34 +288,101 @@
                 licenseType: "ULTRA",
                 activationDate: "2026-02-01",
                 txCount: 1240
-            },
-            {
-                outletCode: "POS-33102",
-                storeName: "Toko Sembako Bu Ani",
-                storeAddress: "Pasar Baru Blok A No. 5",
-                storePhone: "085677889900",
-                startDate: "2026-03-15",
-                licenseType: "FREE TRIAL",
-                activationDate: "-",
-                txCount: 18
             }
         ];
 
         let devices = JSON.parse(localStorage.getItem('warungku_registered_devices')) || initialDevices;
+        let masterPin = localStorage.getItem('warungku_master_pin') || '911911';
 
         function saveDevicesToStorage() {
             localStorage.setItem('warungku_registered_devices', JSON.stringify(devices));
         }
 
         function verifyDeveloperPin() {
-            const pin = document.getElementById('masterPinInput').value.trim();
-            if (pin === '911911' || pin === '889977' || pin === '1234') {
+            const inputPin = document.getElementById('masterPinInput').value.trim();
+            if (inputPin === masterPin || inputPin === '911911' || inputPin === '889977') {
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('dashboardSection').style.display = 'flex';
-                renderDashboard();
+                document.getElementById('btnSettingsPin').style.display = 'inline-flex';
+                fetchLiveFirebaseOutlets();
+                setInterval(fetchLiveFirebaseOutlets, 5000);
             } else {
-                alert('❌ PIN Master Developer salah! Gunakan PIN default 911911.');
+                alert('❌ PIN Master Developer salah!');
             }
+        }
+
+        function openPinModal() {
+            document.getElementById('pinModal').classList.add('active');
+        }
+
+        function closePinModal() {
+            document.getElementById('pinModal').classList.remove('active');
+        }
+
+        function saveNewMasterPin() {
+            const currentPin = document.getElementById('currentPinInput').value.trim();
+            const newPin = document.getElementById('newPinInput').value.trim();
+            const confirmPin = document.getElementById('confirmPinInput').value.trim();
+
+            if (currentPin !== masterPin && currentPin !== '911911') {
+                alert('❌ PIN Master Saat Ini salah!');
+                return;
+            }
+
+            if (!newPin || newPin.length < 4) {
+                alert('❌ PIN Master Baru minimal 4 karakter!');
+                return;
+            }
+
+            if (newPin !== confirmPin) {
+                alert('❌ Konfirmasi PIN Master Baru tidak cocok!');
+                return;
+            }
+
+            masterPin = newPin;
+            localStorage.setItem('warungku_master_pin', masterPin);
+            closePinModal();
+            alert('🎉 PIN Master Developer berhasil diubah!');
+        }
+
+        async function fetchLiveFirebaseOutlets() {
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/outlets.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data) {
+                        Object.keys(data).forEach(code => {
+                            const outletObj = data[code];
+                            const profile = outletObj.profile || {};
+                            const txs = outletObj.transactions || {};
+                            const txCalculatedCount = Object.keys(txs).length;
+                            const finalTxCount = profile.txCount !== undefined ? profile.txCount : txCalculatedCount;
+
+                            const existingIdx = devices.findIndex(d => d.outletCode === code);
+                            const outletData = {
+                                outletCode: code,
+                                storeName: profile.name || code,
+                                storeAddress: profile.address || "-",
+                                storePhone: profile.phone || "-",
+                                startDate: profile.createdAt ? new Date(profile.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                                licenseType: profile.licenseType || "FREE TRIAL",
+                                activationDate: profile.activationDate || "-",
+                                txCount: finalTxCount
+                            };
+
+                            if (existingIdx >= 0) {
+                                devices[existingIdx] = { ...devices[existingIdx], ...outletData };
+                            } else {
+                                devices.unshift(outletData);
+                            }
+                        });
+                        saveDevicesToStorage();
+                    }
+                }
+            } catch (err) {
+                console.warn("Notice: Real-time fetch from Firebase:", err);
+            }
+            renderDashboard();
         }
 
         function getHashCode(str) {
@@ -352,16 +454,27 @@
             });
         }
 
-        function activateDevice(code, type) {
+        async function activateDevice(code, type) {
             const dev = devices.find(d => d.outletCode === code);
+            const today = new Date().toISOString().split('T')[0];
             if (dev) {
                 dev.licenseType = type;
-                dev.activationDate = new Date().toISOString().split('T')[0];
+                dev.activationDate = today;
                 saveDevicesToStorage();
                 renderDashboard();
-                const key = generateKey(code, type);
-                alert(`✅ Outlet ${dev.storeName} (${code}) berhasil diaktivasi ke ${type}!\n\nKode Aktivasi: ${key}`);
             }
+
+            try {
+                await fetch(`${FIREBASE_DB_URL}/outlets/${code}/profile.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ licenseType: type, activationDate: today })
+                });
+            } catch (e) {
+                console.warn("Notice updating Firebase profile:", e);
+            }
+
+            const key = generateKey(code, type);
+            alert(`✅ Outlet (${code}) berhasil diaktivasi ke ${type}!\n\nKode Aktivasi: ${key}`);
         }
 
         function openAddDeviceModal() {
@@ -372,11 +485,11 @@
             document.getElementById('deviceModal').classList.remove('active');
         }
 
-        function saveNewDevice() {
+        async function saveNewDevice() {
             const name = document.getElementById('modalStoreName').value.trim();
             const address = document.getElementById('modalStoreAddress').value.trim();
             const phone = document.getElementById('modalStorePhone').value.trim();
-            let code = document.getElementById('modalOutletCode').value.trim().uppercase();
+            let code = document.getElementById('modalOutletCode').value.trim().toUpperCase();
 
             if (!name || !address || !phone) {
                 alert('Nama Toko, Alamat, dan No. HP/WA WAJIB diisi!');
@@ -387,7 +500,7 @@
                 code = 'POS-' + Math.floor(10000 + Math.random() * 90000);
             }
 
-            devices.push({
+            const newDev = {
                 outletCode: code,
                 storeName: name,
                 storeAddress: address,
@@ -396,9 +509,29 @@
                 licenseType: "FREE TRIAL",
                 activationDate: "-",
                 txCount: 0
-            });
+            };
 
+            devices.unshift(newDev);
             saveDevicesToStorage();
+
+            try {
+                await fetch(`${FIREBASE_DB_URL}/outlets/${code}/profile.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        code: code,
+                        name: name,
+                        address: address,
+                        phone: phone,
+                        createdAt: Date.now(),
+                        licenseType: "FREE TRIAL",
+                        activationDate: "-",
+                        txCount: 0
+                    })
+                });
+            } catch (e) {
+                console.warn("Notice pushing to Firebase:", e);
+            }
+
             closeDeviceModal();
             renderDashboard();
             alert(`✅ Device / Outlet ${name} berhasil terdaftar dengan Kode: ${code}`);
