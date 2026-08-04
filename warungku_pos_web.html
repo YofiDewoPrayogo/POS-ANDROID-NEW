@@ -302,7 +302,7 @@
 
         let devices = JSON.parse(localStorage.getItem('warungku_registered_devices')) || initialDevices;
         let masterPin = localStorage.getItem('warungku_master_pin') || '911911';
-        let firebaseDbUrl = localStorage.getItem('warungku_firebase_url') || 'https://warungku-pos-default-rtdb.firebaseio.com';
+        let firebaseDbUrl = localStorage.getItem('warungku_firebase_url') || 'https://warungku-43ea5-default-rtdb.firebaseio.com';
 
         function saveDevicesToStorage() {
             localStorage.setItem('warungku_registered_devices', JSON.stringify(devices));

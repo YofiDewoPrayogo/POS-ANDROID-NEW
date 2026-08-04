@@ -16,7 +16,7 @@ object FirebaseSyncManager {
     private const val TAG = "FirebaseSyncManager"
     
     // Default Firebase Realtime Database URL
-    var firebaseUrl = "https://warungku-pos-default-rtdb.firebaseio.com"
+    var firebaseUrl = "https://warungku-43ea5-default-rtdb.firebaseio.com"
 
     private val client = OkHttpClient.Builder().build()
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }

@@ -19,7 +19,7 @@ class PosRepository(private val db: PosDatabase, context: Context) {
     fun getCustomLogoPath(): String? = prefs.getString("custom_logo_path", null)
     fun setCustomLogoPath(path: String?) = prefs.edit().putString("custom_logo_path", path).apply()
 
-    fun getFirebaseUrl(): String = prefs.getString("firebase_url", "https://warungku-pos-default-rtdb.firebaseio.com") ?: "https://warungku-pos-default-rtdb.firebaseio.com"
+    fun getFirebaseUrl(): String = prefs.getString("firebase_url", "https://warungku-43ea5-default-rtdb.firebaseio.com") ?: "https://warungku-43ea5-default-rtdb.firebaseio.com"
     fun setFirebaseUrl(url: String) {
         val cleanUrl = url.trim().removeSuffix("/")
         prefs.edit().putString("firebase_url", cleanUrl).apply()
