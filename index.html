@@ -3,126 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WarungKu POS - Activation & License Management Portal</title>
+    <title>WarungKu POS - Dashboard Manajemen Outlet & Lisensi</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="WarungKu Activation">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/869/869636.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6600;
-            --primary-dark: #E05500;
-            --secondary: #1E2B4D;
-            --bg-dark: #0F172A;
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --secondary: #0F172A;
+            --bg-canvas: #F8FAFC;
             --surface: #FFFFFF;
-            --surface-variant: #F8FAFC;
-            --text-dark: #0F172A;
+            --text-main: #0F172A;
             --text-muted: #64748B;
+            --text-sub: #94A3B8;
             --border: #E2E8F0;
-            --success: #10B981;
-            --purple: #8B5CF6;
-            --danger: #EF4444;
+            --border-hover: #CBD5E1;
+            --success: #059669;
+            --success-bg: #ECFDF5;
+            --warning: #D97706;
+            --warning-bg: #FFFBEB;
+            --purple: #7C3AED;
+            --purple-bg: #F5F3FF;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #F1F5F9; color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-canvas); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; font-size: 14px; line-height: 1.5; }
 
-        /* Header Bar */
-        .header { background-color: var(--secondary); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .header-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; color: var(--primary); }
-        .header-title span { color: white; font-weight: 400; font-size: 14px; opacity: 0.85; }
-        .pro-badge { background: linear-gradient(135deg, #FF6600, #F59E0B); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+        /* Header Navigation */
+        .navbar { background-color: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; color: var(--secondary); letter-spacing: -0.3px; }
+        .brand-sub { font-weight: 500; font-size: 13px; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 12px; margin-left: 4px; }
+        .nav-actions { display: flex; align-items: center; gap: 12px; }
 
-        /* Main Layout */
-        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+        /* Container */
+        .container { max-width: 1240px; margin: 28px auto; padding: 0 20px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
 
         /* Cards */
-        .card { background: white; border-radius: 16px; padding: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .card-title { font-size: 18px; font-weight: 700; color: var(--secondary); display: flex; align-items: center; gap: 8px; }
+        .card { background: var(--surface); border-radius: 12px; padding: 20px 24px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .card-title { font-size: 15px; font-weight: 700; color: var(--secondary); letter-spacing: -0.2px; display: flex; align-items: center; gap: 8px; }
 
-        /* Forms & Inputs */
+        /* Tabs Navigation */
+        .tab-bar { display: flex; border-bottom: 1px solid var(--border); gap: 24px; margin-bottom: 16px; }
+        .tab-btn { padding: 10px 4px; font-size: 14px; font-weight: 600; color: var(--text-muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Metric Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .stat-card { background: var(--surface); border-radius: 10px; padding: 16px 20px; border: 1px solid var(--border); }
+        .stat-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 24px; font-weight: 800; color: var(--secondary); margin-top: 4px; letter-spacing: -0.5px; }
+
+        /* Form Controls */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
         .input-group { display: flex; flex-direction: column; gap: 6px; }
-        .input-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-        .input-control { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-size: 14px; outline: none; transition: all 0.2s; }
-        .input-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,102,0,0.15); }
+        .input-group label { font-size: 12px; font-weight: 600; color: var(--text-main); }
+        .input-control { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; background: #FFFFFF; color: var(--text-main); transition: border-color 0.2s, box-shadow 0.2s; }
+        .input-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        /* Search Control */
+        .search-control { padding: 8px 12px 8px 36px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; width: 300px; background: #FFFFFF url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2364748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 10px center; }
+        .search-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
         /* Buttons */
-        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
-        .btn { padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s, transform 0.1s; text-decoration: none; }
-        .btn:active { transform: scale(0.98); }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; }
         .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
         .btn-secondary { background-color: var(--secondary); color: white; }
-        .btn-success { background-color: var(--success); color: white; }
-        .btn-purple { background-color: var(--purple); color: white; }
-        .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-dark); }
-        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-outline { background-color: white; border-color: var(--border); color: var(--text-main); }
+        .btn-outline:hover { background-color: #F1F5F9; border-color: var(--border-hover); }
+        .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
 
-        /* Responsive Table */
-        .table-responsive { overflow-x: auto; margin-top: 16px; border-radius: 12px; border: 1px solid var(--border); }
+        /* Table */
+        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 12px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-        th { background-color: var(--secondary); color: white; padding: 14px; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-        td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        tr:nth-child(even) { background-color: #F8FAFC; }
-        tr:hover { background-color: #F1F5F9; }
+        th { background-color: #F8FAFC; color: var(--text-muted); padding: 12px 16px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #F8FAFC; }
 
         /* Badges */
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
-        .badge-pro { background-color: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
-        .badge-ultra { background-color: #EDE9FE; color: #6D28D9; border: 1px solid #DDD6FE; }
-        .badge-trial { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
-        .live-dot { height: 10px; width: 10px; background-color: #10B981; border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+        .status-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-pro { background-color: var(--warning-bg); color: var(--warning); border: 1px solid #FCD34D; }
+        .badge-ultra { background-color: var(--purple-bg); color: var(--purple); border: 1px solid #DDD6FE; }
+        .badge-trial { background-color: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; }
+        .badge-live { background-color: var(--success-bg); color: var(--success); border: 1px solid #A7F3D0; }
 
-        /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 14px; padding: 18px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
-        .stat-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-        .stat-value { font-size: 26px; font-weight: 800; color: var(--secondary); }
-
-        /* Modal Overlay */
-        .modal { display: none; position: fixed; inset: 0; background-color: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background-color: rgba(15,23,42,0.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-body { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-body { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
 
-        /* Print Media Styles for PDF */
+        /* Print Media Styles */
         @media print {
-            body { background: white; color: black; }
-            .header, .btn-group, .form-card, .stats-grid, #authSection { display: none !important; }
+            body { background: white; color: black; font-size: 11px; }
+            .navbar, .btn-group, .form-card, .search-control, #authSection, .tab-bar { display: none !important; }
             .container { max-width: 100%; margin: 0; padding: 0; }
             .card { border: none; box-shadow: none; padding: 0; }
             table { width: 100%; border: 1px solid #000; }
-            th, td { border: 1px solid #000; padding: 8px; color: black !important; background: white !important; }
-            .badge { border: none; color: black !important; background: transparent !important; }
+            th, td { border: 1px solid #000; padding: 6px; color: black !important; background: white !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <div class="header-title">
-            🛡️ WarungKu POS <span>Portal Aktivasi & Monitoring Live</span>
+    <!-- Header Navbar -->
+    <div class="navbar">
+        <div class="brand">
+            WarungKu POS <span class="brand-sub">Platform Aktivasi & Analytics Outlet</span>
         </div>
-        <div style="display:flex; align-items:center; gap: 12px;">
-            <button class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; display:none;" onclick="openPinModal()" id="btnSettingsPin">⚙️ Pengaturan PIN & Database</button>
-            <div class="pro-badge">PORTAL DEVELOPER</div>
+        <div class="nav-actions">
+            <button class="btn btn-outline btn-sm" id="btnSettingsPin" style="display:none;" onclick="openPinModal()">Pengaturan PIN & Database</button>
+            <span class="status-badge badge-pro" style="font-weight:600;">DEVELOPER CONSOLE</span>
         </div>
     </div>
 
     <div class="container">
 
         <!-- Login Authentication Section -->
-        <div id="authSection" class="card" style="max-width: 440px; margin: 40px auto; text-align: center;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
-            <h2 style="font-size: 20px; margin-bottom: 6px;">Autentikasi Master Developer</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Masukkan PIN Master Developer untuk mengelola lisensi dan device terdaftar.</p>
+        <div id="authSection" class="card" style="max-width: 400px; margin: 40px auto; text-align: center;">
+            <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--secondary);">Autentikasi Master Developer</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Masukkan PIN Master Developer untuk mengelola lisensi dan laporan outlet.</p>
             <div class="input-group" style="margin-bottom: 20px;">
                 <label>PIN Master Developer</label>
-                <input type="password" class="input-control" id="masterPinInput" placeholder="••••••" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
+                <input type="password" class="input-control" id="masterPinInput" placeholder="••••••" style="text-align: center; font-size: 16px; letter-spacing: 4px;">
             </div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="verifyDeveloperPin()">Masuk Portal Developer ➔</button>
+            <button class="btn btn-primary" style="width: 100%;" onclick="verifyDeveloperPin()">Masuk Developer Console</button>
         </div>
 
         <!-- Main Dashboard Section (Hidden until authenticated) -->
@@ -131,28 +141,27 @@
             <!-- Summary Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <span class="stat-title">Total Device / Outlet</span>
-                    <span class="stat-value" id="statTotalDevices">0</span>
+                    <span class="stat-title">Total Outlet Terdaftar</span>
+                    <div class="stat-value" id="statTotalDevices">0</div>
                 </div>
                 <div class="stat-card">
                     <span class="stat-title">Lisensi PRO Aktif</span>
-                    <span class="stat-value" style="color: #D97706;" id="statProDevices">0</span>
+                    <div class="stat-value" style="color: var(--warning);" id="statProDevices">0</div>
                 </div>
                 <div class="stat-card">
                     <span class="stat-title">Lisensi ULTRA Aktif</span>
-                    <span class="stat-value" style="color: #6D28D9;" id="statUltraDevices">0</span>
+                    <div class="stat-value" style="color: var(--purple);" id="statUltraDevices">0</div>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Total Transaksi Seluruh Outlet</span>
-                    <span class="stat-value" style="color: var(--primary);" id="statTotalTransactions">0</span>
+                    <span class="stat-title">Total Akumulasi Transaksi</span>
+                    <div class="stat-value" style="color: var(--primary);" id="statTotalTransactions">0</div>
                 </div>
             </div>
 
-            <!-- License Key Generator Form -->
+            <!-- License Key Generator -->
             <div class="card form-card">
                 <div class="card-header">
-                    <div class="card-title">🔑 Generator Kunci Aktivasi Lisensi</div>
-                    <button class="btn btn-outline" style="font-size: 12px; padding: 6px 12px;" onclick="openPinModal()">⚙️ Pengaturan PIN & Database</button>
+                    <div class="card-title">Generator Kode Aktivasi Lisensi</div>
                 </div>
                 <div class="form-grid">
                     <div class="input-group">
@@ -160,7 +169,7 @@
                         <input type="text" class="input-control" id="genOutletCode" placeholder="Contoh: POS-88219">
                     </div>
                     <div class="input-group">
-                        <label>Pilih Tipe Lisensi</label>
+                        <label>Tipe Lisensi</label>
                         <select class="input-control" id="genLicenseType">
                             <option value="PRO">PRO (Unlimited Transaksi)</option>
                             <option value="ULTRA">ULTRA (Multi-Device + Cloud Sync)</option>
@@ -168,63 +177,129 @@
                     </div>
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="generateAndCopyKey()">⚡ Generate & Salin Kode Aktivasi</button>
-                    <button class="btn btn-secondary" onclick="openAddDeviceModal()">+ Registrasikan Device Baru</button>
+                    <button class="btn btn-primary" onclick="generateAndCopyKey()">Generate & Salin Kode Aktivasi</button>
+                    <button class="btn btn-outline" onclick="openAddDeviceModal()">+ Registrasi Device Baru</button>
                 </div>
-                <div id="generatedKeyResult" style="margin-top: 14px; padding: 12px; background: #FFFBEB; border: 1px dashed #FCD34D; border-radius: 10px; display: none; font-size: 13px; font-weight: 700; color: #92400E;"></div>
+                <div id="generatedKeyResult" style="margin-top: 14px; padding: 12px; background: var(--warning-bg); border: 1px solid #FCD34D; border-radius: 8px; display: none; font-size: 13px; font-weight: 600; color: #92400E;"></div>
             </div>
 
-            <!-- Registered Devices Table & Monitoring -->
+            <!-- Navigation Tabs -->
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <span class="live-dot" id="cloudStatusDot"></span> 📱 Daftar Outlet & Device Terdaftar
-                        <span id="cloudStatusBadge" style="font-size: 11px; margin-left: 6px; padding: 2px 8px; border-radius: 10px; background: #E2E8F0; color: #475569;">Cek Sync Cloud...</span>
+                <div class="tab-bar">
+                    <button class="tab-btn active" onclick="switchTab('tabOutlets')" id="tabBtnOutlets">Daftar Outlet & Device</button>
+                    <button class="tab-btn" onclick="switchTab('tabReports')" id="tabBtnReports">Analytics & Laporan Transaksi</button>
+                </div>
+
+                <!-- Tab 1: Outlet List View -->
+                <div id="tabOutlets" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <input type="text" class="search-control" id="searchStoreInput" placeholder="Cari Nama Toko, Kode Outlet, atau No. HP..." oninput="filterOutlets()">
+                        <div class="btn-group">
+                            <span class="status-badge badge-live" id="cloudStatusBadge">Cloud Sync Active</span>
+                            <button class="btn btn-outline btn-sm" onclick="fetchLiveFirebaseOutlets()">Refresh Data</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportToCsv()">Ekspor CSV</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportToPdf()">Cetak PDF</button>
+                        </div>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-outline" onclick="fetchLiveFirebaseOutlets()" style="font-size: 12px; padding: 6px 12px;">🔄 Refresh Realtime</button>
-                        <button class="btn btn-success" onclick="exportToCsv()">📥 Ekspor Excel (CSV)</button>
-                        <button class="btn btn-purple" onclick="exportToPdf()">📄 Ekspor PDF / Cetak Laporan</button>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Kode Outlet</th>
+                                    <th>Nama Toko / Outlet</th>
+                                    <th>Alamat Toko</th>
+                                    <th>No. HP / WA</th>
+                                    <th>Mulai Penggunaan</th>
+                                    <th>Lisensi</th>
+                                    <th>Tanggal Aktivasi</th>
+                                    <th>Total Transaksi</th>
+                                    <th>Aksi Aktivasi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deviceTableBody">
+                                <!-- Dynamically Rendered -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Kode Outlet</th>
-                                <th>Nama Toko / Outlet</th>
-                                <th>Alamat Toko</th>
-                                <th>No. HP / WA</th>
-                                <th>Mulai Penggunaan</th>
-                                <th>Lisensi & Status</th>
-                                <th>Tanggal Aktivasi</th>
-                                <th>Total Transaksi</th>
-                                <th>Aksi Aktivasi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="deviceTableBody">
-                            <!-- Dynamically Rendered from Firebase & Local -->
-                        </tbody>
-                    </table>
+                <!-- Tab 2: Analytics & Reports View -->
+                <div id="tabReports" style="display: none; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div class="input-group">
+                                <label>Filter Periode Bulan</label>
+                                <select class="input-control" id="reportMonthSelect" onchange="renderReports()">
+                                    <option value="ALL">Semua Bulan</option>
+                                    <option value="2026-08">Agustus 2026</option>
+                                    <option value="2026-07">Juli 2026</option>
+                                    <option value="2026-06">Juni 2026</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Filter Hari Spesifik</label>
+                                <select class="input-control" id="reportDaySelect" onchange="renderReports()">
+                                    <option value="ALL">Semua Hari</option>
+                                    <option value="SUNDAY">Hari Minggu (Weekend Peak)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline btn-sm" onclick="exportReportToCsv()">Ekspor Laporan (CSV)</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportToPdf()">Cetak Laporan (PDF)</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-title">Rata-Rata Transaksi / Outlet</span>
+                            <div class="stat-value" id="reportAvgTx">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-title">Outlet Paling Aktif</span>
+                            <div class="stat-value" style="font-size: 16px; font-weight:700;" id="reportTopStore">-</div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Kode Outlet</th>
+                                    <th>Nama Toko</th>
+                                    <th>No. HP</th>
+                                    <th>Mulai Bergabung</th>
+                                    <th>Status Lisensi</th>
+                                    <th>Estimasi Volume Transaksi Periode</th>
+                                    <th>Status Keaktifan Device</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody">
+                                <!-- Dynamically Rendered Reports -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
             </div>
 
         </div>
 
     </div>
 
-    <!-- Modal Registrasi / Tambah Device Baru -->
+    <!-- Modal Registrasi Device Baru -->
     <div class="modal" id="deviceModal">
         <div class="modal-body">
-            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Registrasi Device / Outlet Baru</h3>
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--secondary);">Registrasi Outlet Baru</h3>
             <div class="input-group" style="margin-bottom: 12px;">
                 <label>Nama Toko / Outlet *</label>
                 <input type="text" class="input-control" id="modalStoreName" placeholder="Contoh: Toko Berkah Jaya">
             </div>
             <div class="input-group" style="margin-bottom: 12px;">
-                <label>Alamat Toko *</label>
+                <label>Alamat Lengkap Toko *</label>
                 <input type="text" class="input-control" id="modalStoreAddress" placeholder="Contoh: Jl. Sudirman No. 45, Jakarta">
             </div>
             <div class="input-group" style="margin-bottom: 12px;">
@@ -233,11 +308,11 @@
             </div>
             <div class="input-group" style="margin-bottom: 16px;">
                 <label>Kode Outlet (Opsional)</label>
-                <input type="text" class="input-control" id="modalOutletCode" placeholder="Otomatis jika dikosongkan (Contoh: POS-88219)">
+                <input type="text" class="input-control" id="modalOutletCode" placeholder="Otomatis jika dikosongkan (POS-XXXXX)">
             </div>
             <div class="btn-group" style="justify-content: flex-end;">
                 <button class="btn btn-outline" onclick="closeDeviceModal()">Batal</button>
-                <button class="btn btn-primary" onclick="saveNewDevice()">Simpan Device</button>
+                <button class="btn btn-primary" onclick="saveNewDevice()">Simpan Data Outlet</button>
             </div>
         </div>
     </div>
@@ -245,8 +320,8 @@
     <!-- Modal Pengaturan PIN & Database -->
     <div class="modal" id="pinModal">
         <div class="modal-body">
-            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">⚙️ Ubah PIN Master & URL Database</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Kelola PIN akses portal dan URL Firebase Realtime Database Anda.</p>
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--secondary);">Pengaturan PIN & Database</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Ubah PIN akses developer dan URL Firebase Realtime Database.</p>
             
             <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
                 <div class="input-group" style="margin-bottom: 10px;">
@@ -264,9 +339,8 @@
             </div>
 
             <div class="input-group" style="margin-bottom: 16px;">
-                <label>URL Firebase Realtime Database (Opsional Kustom)</label>
-                <input type="text" class="input-control" id="firebaseUrlInput" placeholder="https://your-app-default-rtdb.firebaseio.com">
-                <small style="font-size: 11px; color: var(--text-muted);">Masukkan URL Firebase Realtime DB Anda sendiri jika ingin melakukan sinkronisasi langsung dengan server Cloud kustom.</small>
+                <label>URL Firebase Realtime Database</label>
+                <input type="text" class="input-control" id="firebaseUrlInput" placeholder="https://your-project-id-default-rtdb.firebaseio.com">
             </div>
 
             <div class="btn-group" style="justify-content: flex-end;">
@@ -318,7 +392,18 @@
                 fetchLiveFirebaseOutlets();
                 setInterval(fetchLiveFirebaseOutlets, 5000);
             } else {
-                alert('❌ PIN Master Developer salah!');
+                alert('PIN Master Developer salah!');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('tabOutlets').style.display = tabId === 'tabOutlets' ? 'flex' : 'none';
+            document.getElementById('tabReports').style.display = tabId === 'tabReports' ? 'flex' : 'none';
+            document.getElementById('tabBtnOutlets').classList.toggle('active', tabId === 'tabOutlets');
+            document.getElementById('tabBtnReports').classList.toggle('active', tabId === 'tabReports');
+
+            if (tabId === 'tabReports') {
+                renderReports();
             }
         }
 
@@ -344,15 +429,15 @@
 
             if (newPin) {
                 if (currentPin !== masterPin && currentPin !== '911911') {
-                    alert('❌ PIN Master Saat Ini salah!');
+                    alert('PIN Master Saat Ini salah!');
                     return;
                 }
                 if (newPin.length < 4) {
-                    alert('❌ PIN Master Baru minimal 4 karakter!');
+                    alert('PIN Master Baru minimal 4 karakter!');
                     return;
                 }
                 if (newPin !== confirmPin) {
-                    alert('❌ Konfirmasi PIN Master Baru tidak cocok!');
+                    alert('Konfirmasi PIN Master Baru tidak cocok!');
                     return;
                 }
                 masterPin = newPin;
@@ -361,12 +446,11 @@
 
             closePinModal();
             fetchLiveFirebaseOutlets();
-            alert('🎉 Pengaturan berhasil disimpan!');
+            alert('Pengaturan berhasil disimpan!');
         }
 
         async function fetchLiveFirebaseOutlets() {
             const statusBadge = document.getElementById('cloudStatusBadge');
-            const statusDot = document.getElementById('cloudStatusDot');
 
             try {
                 const res = await fetch(`${firebaseDbUrl}/outlets.json`);
@@ -401,22 +485,19 @@
                         saveDevicesToStorage();
                     }
                     if (statusBadge) {
-                        statusBadge.innerText = "🟢 Cloud Sync Live Active";
-                        statusBadge.style.background = "#D1FAE5";
-                        statusBadge.style.color = "#065F46";
+                        statusBadge.innerText = "Cloud Sync Active";
+                        statusBadge.className = "status-badge badge-live";
                     }
                 } else {
                     if (statusBadge) {
-                        statusBadge.innerText = "🟡 Mode Lokal (Set URL Database)";
-                        statusBadge.style.background = "#FEF3C7";
-                        statusBadge.style.color = "#92400E";
+                        statusBadge.innerText = "Offline / Local Mode";
+                        statusBadge.className = "status-badge badge-pro";
                     }
                 }
             } catch (err) {
                 if (statusBadge) {
-                    statusBadge.innerText = "🟡 Mode Lokal / Offline Ready";
-                    statusBadge.style.background = "#FEF3C7";
-                    statusBadge.style.color = "#92400E";
+                    statusBadge.innerText = "Offline / Local Mode";
+                    statusBadge.className = "status-badge badge-pro";
                 }
             }
             renderDashboard();
@@ -449,14 +530,26 @@
             const key = generateKey(code, type);
             const resDiv = document.getElementById('generatedKeyResult');
             resDiv.style.display = 'block';
-            resDiv.innerHTML = `🎉 Kode Aktivasi Lisensi ${type}: <b>${key}</b><br><small>Salin kode ini dan berikan kepada pemilik outlet untuk diaktivasi di APK Android.</small>`;
+            resDiv.innerHTML = `Kode Aktivasi Lisensi ${type}: <b>${key}</b><br><small>Salin kode ini dan berikan kepada pemilik outlet untuk diaktivasi di APK Android.</small>`;
 
             navigator.clipboard.writeText(key).then(() => {
-                alert(`✅ Kode Aktivasi ${type} Berhasil Dibuat & Disalin ke Clipboard:\n\n${key}`);
+                alert(`Kode Aktivasi ${type} Berhasil Dibuat & Disalin ke Clipboard:\n\n${key}`);
             });
         }
 
+        function filterOutlets() {
+            renderDashboard();
+        }
+
         function renderDashboard() {
+            const query = (document.getElementById('searchStoreInput')?.value || '').toLowerCase().trim();
+
+            const filtered = devices.filter(d => 
+                d.storeName.toLowerCase().includes(query) ||
+                d.outletCode.toLowerCase().includes(query) ||
+                d.storePhone.toLowerCase().includes(query)
+            );
+
             document.getElementById('statTotalDevices').innerText = devices.length;
             document.getElementById('statProDevices').innerText = devices.filter(d => d.licenseType === 'PRO').length;
             document.getElementById('statUltraDevices').innerText = devices.filter(d => d.licenseType === 'ULTRA').length;
@@ -466,7 +559,7 @@
             const tbody = document.getElementById('deviceTableBody');
             tbody.innerHTML = '';
 
-            devices.forEach((d, idx) => {
+            filtered.forEach((d, idx) => {
                 const tr = document.createElement('tr');
                 const badgeClass = d.licenseType === 'PRO' ? 'badge-pro' : (d.licenseType === 'ULTRA' ? 'badge-ultra' : 'badge-trial');
                 
@@ -475,20 +568,58 @@
                     <td><b>${d.outletCode}</b></td>
                     <td><b>${d.storeName}</b></td>
                     <td>${d.storeAddress}</td>
-                    <td><a href="https://wa.me/${d.storePhone.replace(/[^0-9]/g, '')}" target="_blank" style="color: #10B981; font-weight:700; text-decoration:none;">💬 ${d.storePhone}</a></td>
+                    <td><a href="https://wa.me/${d.storePhone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--primary); font-weight:600; text-decoration:none;">${d.storePhone}</a></td>
                     <td>${d.startDate}</td>
-                    <td><span class="badge ${badgeClass}">${d.licenseType}</span></td>
+                    <td><span class="status-badge ${badgeClass}">${d.licenseType}</span></td>
                     <td>${d.activationDate}</td>
                     <td><b>${(d.txCount || 0).toLocaleString('id-ID')} Tx</b></td>
                     <td>
                         <div class="btn-group">
-                            <button class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="activateDevice('${d.outletCode}', 'PRO')">Set PRO</button>
-                            <button class="btn btn-purple" style="padding: 4px 8px; font-size: 11px;" onclick="activateDevice('${d.outletCode}', 'ULTRA')">Set ULTRA</button>
+                            <button class="btn btn-primary btn-sm" onclick="activateDevice('${d.outletCode}', 'PRO')">Set PRO</button>
+                            <button class="btn btn-outline btn-sm" onclick="activateDevice('${d.outletCode}', 'ULTRA')">Set ULTRA</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderReports() {
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
+
+            let totalTxSum = 0;
+            let topStoreName = '-';
+            let maxTx = -1;
+
+            devices.forEach((d, idx) => {
+                const count = parseInt(d.txCount) || 0;
+                totalTxSum += count;
+                if (count > maxTx) {
+                    maxTx = count;
+                    topStoreName = d.storeName;
+                }
+
+                const tr = document.createElement('tr');
+                const badgeClass = d.licenseType === 'PRO' ? 'badge-pro' : (d.licenseType === 'ULTRA' ? 'badge-ultra' : 'badge-trial');
+                const activityStatus = count > 50 ? 'Sangat Aktif' : (count > 0 ? 'Aktif' : 'Baru / Minimal');
+
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td><b>${d.outletCode}</b></td>
+                    <td><b>${d.storeName}</b></td>
+                    <td>${d.storePhone}</td>
+                    <td>${d.startDate}</td>
+                    <td><span class="status-badge ${badgeClass}">${d.licenseType}</span></td>
+                    <td><b>${count.toLocaleString('id-ID')} Transaksi</b></td>
+                    <td><span class="status-badge badge-live">${activityStatus}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const avg = devices.length > 0 ? Math.round(totalTxSum / devices.length) : 0;
+            document.getElementById('reportAvgTx').innerText = avg.toLocaleString('id-ID') + ' Tx / Outlet';
+            document.getElementById('reportTopStore').innerText = topStoreName;
         }
 
         async function activateDevice(code, type) {
@@ -511,7 +642,7 @@
             }
 
             const key = generateKey(code, type);
-            alert(`✅ Outlet (${code}) berhasil diaktivasi ke ${type}!\n\nKode Aktivasi: ${key}`);
+            alert(`Outlet (${code}) berhasil diaktivasi ke ${type}!\n\nKode Aktivasi: ${key}`);
         }
 
         function openAddDeviceModal() {
@@ -571,7 +702,7 @@
 
             closeDeviceModal();
             renderDashboard();
-            alert(`✅ Device / Outlet ${name} berhasil terdaftar dengan Kode: ${code}`);
+            alert(`Device / Outlet ${name} berhasil terdaftar dengan Kode: ${code}`);
         }
 
         function exportToCsv() {
@@ -585,6 +716,20 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = `WarungKu_Daftar_Device_Outlet_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        function exportReportToCsv() {
+            let csv = "No,Kode Outlet,Nama Toko,No HP WA,Mulai Bergabung,Status Lisensi,Volume Transaksi\n";
+            devices.forEach((d, i) => {
+                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storePhone}","${d.startDate}","${d.licenseType}","${d.txCount}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `WarungKu_Laporan_Analytics_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         }
 
