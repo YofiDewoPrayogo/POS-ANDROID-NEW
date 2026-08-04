@@ -1,16 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
-
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/1d65b8b4-7958-4420-be8c-c3ace1299415
-
-## Run Locally
-
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
 
 # 🛒 WarungKu POS v2.0 - Sistem Kasir & Manajemen Stok Toko (Android & iOS Web)
 
@@ -72,6 +59,46 @@ View your app in AI Studio: https://ai.studio/apps/1d65b8b4-7958-4420-be8c-c3ace
 - **State Management**: Android ViewModel & Kotlin StateFlow
 - **PDF Engine**: Android `PdfDocument` Native API
 - **Threading**: Kotlin Coroutines & Dispatchers.IO
+
+---
+
+## 🎨 Cara Custom & Modifikasi Aplikasi (Customization Guide)
+
+Jika Anda ingin mengubah nama toko, logo, warna tampilan, PIN Developer, atau format cetak struk:
+
+### 1. Mengubah Logo Toko & Halaman Login
+- Ganti file gambar logo resmi di lokasi berikut:  
+  `app/src/main/res/drawable/app_warungku_logo.jpg`
+- Bebas menggunakan format `.jpg` atau `.png` dengan nama file yang sama.
+
+### 2. Mengubah Nama Aplikasi & Judul
+- **Nama Aplikasi Android**: Buka `app/src/main/res/values/strings.xml` lalu ubah:
+  ```xml
+  <string name="app_name">Nama Toko Anda</string>
+  ```
+- **ID Paket (Package Name)**: Buka `app/build.gradle.kts` lalu sesuaikan `applicationId`:
+  ```kotlin
+  applicationId = "com.namamerek.pos"
+  ```
+
+### 3. Mengubah Palet Warna Tema (Theme Palette)
+- Buka file `app/src/main/java/com/yofidewo/pos/ui/theme/Color.kt`
+- Ubah kode warna hex berikut sesuai identitas toko Anda:
+  ```kotlin
+  val PrimaryOrange = Color(0xFFFF6600) // Warna Aksen Utama
+  val SlateNavy = Color(0xFF1E2B4D)     // Warna Header & Sekunder
+  ```
+
+### 4. Mengubah PIN Master Developer & Akun Verifikasi
+- Buka file `app/src/main/java/com/yofidewo/pos/ui/screens/SettingsUsersScreen.kt`
+- Cari baris verifikasi PIN dan ubah sesuai kebutuhan Anda:
+  ```kotlin
+  if (masterPinInput.trim() == "911911") // Ubah PIN sesuai keinginan Anda
+  ```
+
+### 5. Mengubah Format Cetak Struk Printer Bluetooth Thermal
+- Buka file `app/src/main/java/com/yofidewo/pos/util/PrinterUtil.kt`
+- Sesuaikan header toko, alamat, dan teks ucapan di bagian footer nota cetak.
 
 ---
 
