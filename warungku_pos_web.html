@@ -39,7 +39,7 @@
         .nav-actions { display: flex; align-items: center; gap: 12px; }
 
         /* Container */
-        .container { max-width: 1240px; margin: 28px auto; padding: 0 20px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+        .container { max-width: 1280px; margin: 28px auto; padding: 0 20px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
 
         /* Cards */
         .card { background: var(--surface); border-radius: 12px; padding: 20px 24px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
@@ -74,6 +74,8 @@
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-primary:hover { background-color: var(--primary-hover); }
         .btn-secondary { background-color: var(--secondary); color: white; }
+        .btn-success { background-color: #10B981; color: white; }
+        .btn-success:hover { background-color: #059669; }
         .btn-outline { background-color: white; border-color: var(--border); color: var(--text-main); }
         .btn-outline:hover { background-color: #F1F5F9; border-color: var(--border-hover); }
         .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
@@ -81,8 +83,8 @@
         /* Table */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 12px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-        th { background-color: #F8FAFC; color: var(--text-muted); padding: 12px 16px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-        td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
+        th { background-color: #F8FAFC; color: var(--text-muted); padding: 12px 14px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; white-space: nowrap; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: #F8FAFC; }
 
@@ -93,10 +95,13 @@
         .badge-trial { background-color: #FEF2F2; color: #DC2626; border: 1px solid #FCA5A5; }
         .badge-live { background-color: var(--success-bg); color: var(--success); border: 1px solid #A7F3D0; }
 
+        /* Key Field Box */
+        .key-box { font-family: monospace; font-weight: 700; font-size: 12px; color: var(--primary); background: #EFF6FF; border: 1px solid #BFDBFE; padding: 4px 8px; border-radius: 6px; user-select: all; cursor: pointer; }
+
         /* Modal */
         .modal { display: none; position: fixed; inset: 0; background-color: rgba(15,23,42,0.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-body { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .modal-body { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
 
         /* Official Print PDF Template Styles */
         .print-only { display: none; }
@@ -228,8 +233,8 @@
                                     <th>Nama Toko / Outlet</th>
                                     <th>Alamat Toko</th>
                                     <th>No. HP / WA</th>
-                                    <th>Mulai Penggunaan</th>
-                                    <th>Lisensi</th>
+                                    <th>Status Lisensi</th>
+                                    <th>Kode Aktivasi Lisensi</th>
                                     <th>Tanggal Aktivasi</th>
                                     <th>Total Transaksi</th>
                                     <th>Aksi Aktivasi</th>
@@ -279,7 +284,8 @@
                                     <th>No. HP</th>
                                     <th>Mulai Bergabung</th>
                                     <th>Status Lisensi</th>
-                                    <th>Estimasi Volume Transaksi Periode</th>
+                                    <th>Kode Aktivasi</th>
+                                    <th>Total Transaksi Real-time</th>
                                     <th>Status Keaktifan Device</th>
                                 </tr>
                             </thead>
@@ -300,6 +306,32 @@
             <span>Halaman 1 dari 1</span>
         </div>
 
+    </div>
+
+    <!-- Modal Aktivasi & Share WhatsApp -->
+    <div class="modal" id="activationModal">
+        <div class="modal-body">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--secondary);">Berhasil Aktivasi Outlet</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;" id="actModalSubtitle">Kode aktivasi siap disalin atau dikirim langsung ke WhatsApp customer.</p>
+            
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label>Nama Outlet Toko</label>
+                <input type="text" class="input-control" id="actModalStoreName" readonly style="background: #F8FAFC; font-weight: 700;">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label>Kode Aktivasi Lisensi</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" class="input-control" id="actModalKey" readonly style="font-size: 14px; font-weight: 800; letter-spacing: 1px; color: var(--primary); background: #EFF6FF; border-color: #BFDBFE;">
+                    <button class="btn btn-primary" onclick="copyActivationModalKey()">Salin Kode</button>
+                </div>
+            </div>
+
+            <div class="btn-group" style="justify-content: space-between; margin-top: 20px;">
+                <button class="btn btn-outline" onclick="closeActivationModal()">Tutup</button>
+                <a class="btn btn-success" id="actModalWaBtn" target="_blank">Kirim via WhatsApp</a>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Registrasi Device Baru -->
@@ -540,13 +572,11 @@
             }
 
             const key = generateKey(code, type);
-            const resDiv = document.getElementById('generatedKeyResult');
-            resDiv.style.display = 'block';
-            resDiv.innerHTML = `Kode Aktivasi Lisensi ${type}: <b>${key}</b><br><small>Salin kode ini dan berikan kepada pemilik outlet untuk diaktivasi di APK Android.</small>`;
+            const dev = devices.find(d => d.outletCode === code);
+            const storeName = dev ? dev.storeName : code;
+            const storePhone = dev ? dev.storePhone : "";
 
-            navigator.clipboard.writeText(key).then(() => {
-                alert(`Kode Aktivasi ${type} Berhasil Dibuat & Disalin ke Clipboard:\n\n${key}`);
-            });
+            openActivationSuccessModal(code, storeName, type, key, storePhone);
         }
 
         function filterOutlets() {
@@ -574,15 +604,16 @@
             filtered.forEach((d, idx) => {
                 const tr = document.createElement('tr');
                 const badgeClass = d.licenseType === 'PRO' ? 'badge-pro' : (d.licenseType === 'ULTRA' ? 'badge-ultra' : 'badge-trial');
-                
+                const actKey = generateKey(d.outletCode, d.licenseType === 'FREE TRIAL' ? 'PRO' : d.licenseType);
+
                 tr.innerHTML = `
                     <td>${idx + 1}</td>
                     <td><b>${d.outletCode}</b></td>
                     <td><b>${d.storeName}</b></td>
                     <td>${d.storeAddress}</td>
                     <td><a href="https://wa.me/${d.storePhone.replace(/[^0-9]/g, '')}" target="_blank" style="color: var(--primary); font-weight:600; text-decoration:none;">${d.storePhone}</a></td>
-                    <td>${d.startDate}</td>
                     <td><span class="status-badge ${badgeClass}">${d.licenseType}</span></td>
+                    <td><span class="key-box" onclick="copyText('${actKey}')" title="Klik untuk Salin Kode">${actKey}</span></td>
                     <td>${d.activationDate}</td>
                     <td><b>${(d.txCount || 0).toLocaleString('id-ID')} Tx</b></td>
                     <td>
@@ -602,10 +633,10 @@
 
             devices.forEach((d, idx) => {
                 const count = parseInt(d.txCount) || 0;
-
                 const tr = document.createElement('tr');
                 const badgeClass = d.licenseType === 'PRO' ? 'badge-pro' : (d.licenseType === 'ULTRA' ? 'badge-ultra' : 'badge-trial');
                 const activityStatus = count > 50 ? 'Sangat Aktif' : (count > 0 ? 'Aktif' : 'Baru / Minimal');
+                const actKey = generateKey(d.outletCode, d.licenseType === 'FREE TRIAL' ? 'PRO' : d.licenseType);
 
                 tr.innerHTML = `
                     <td>${idx + 1}</td>
@@ -614,6 +645,7 @@
                     <td>${d.storePhone}</td>
                     <td>${d.startDate}</td>
                     <td><span class="status-badge ${badgeClass}">${d.licenseType}</span></td>
+                    <td><span class="key-box" onclick="copyText('${actKey}')">${actKey}</span></td>
                     <td><b>${count.toLocaleString('id-ID')} Transaksi</b></td>
                     <td><span class="status-badge badge-live">${activityStatus}</span></td>
                 `;
@@ -641,7 +673,48 @@
             }
 
             const key = generateKey(code, type);
-            alert(`Outlet (${code}) berhasil diaktivasi ke ${type}!\n\nKode Aktivasi: ${key}`);
+            const storeName = dev ? dev.storeName : code;
+            const storePhone = dev ? dev.storePhone : "";
+
+            openActivationSuccessModal(code, storeName, type, key, storePhone);
+        }
+
+        function openActivationSuccessModal(code, name, type, key, phone) {
+            document.getElementById('actModalSubtitle').innerText = `Aktivasi Lisensi ${type} untuk outlet ${name} (${code}) berhasil diset.`;
+            document.getElementById('actModalStoreName').value = `${name} (${code})`;
+            document.getElementById('actModalKey').value = key;
+
+            const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
+            const waMsg = encodeURIComponent(`Halo ${name},\nBerikut Kode Aktivasi Lisensi ${type} WarungKu POS Anda:\n\nKode Aktivasi: ${key}\n\nSilakan masukkan kode ini di menu Pengaturan -> Aktivasi Toko pada aplikasi Android Anda. Terima kasih!`);
+            
+            const waBtn = document.getElementById('actModalWaBtn');
+            if (cleanPhone) {
+                waBtn.href = `https://wa.me/${cleanPhone}?text=${waMsg}`;
+                waBtn.style.display = 'inline-flex';
+            } else {
+                waBtn.href = `https://wa.me/?text=${waMsg}`;
+                waBtn.style.display = 'inline-flex';
+            }
+
+            document.getElementById('activationModal').classList.add('active');
+        }
+
+        function closeActivationModal() {
+            document.getElementById('activationModal').classList.remove('active');
+        }
+
+        function copyActivationModalKey() {
+            const keyInput = document.getElementById('actModalKey');
+            keyInput.select();
+            navigator.clipboard.writeText(keyInput.value).then(() => {
+                alert(`Kode Aktivasi Berhasil Disalin:\n\n${keyInput.value}`);
+            });
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Kode Aktivasi Disalin:\n\n${text}`);
+            });
         }
 
         function openAddDeviceModal() {
@@ -706,18 +779,19 @@
 
         function exportToCsv() {
             const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-            let csv = "\uFEFF"; // UTF-8 BOM for clean Microsoft Excel rendering
+            let csv = "\uFEFF";
             csv += "========================================================================================\n";
             csv += "WARUNGKU POS - LAPORAN REKAPITULASI DAFTAR OUTLET DAN LISENSI TERDAFTAR\n";
             csv += `Tanggal Ekspor: ${todayStr}\n`;
             csv += `Total Outlet: ${devices.length} | Total Akumulasi Transaksi: ${devices.reduce((s,d)=>s+(parseInt(d.txCount)||0),0)}\n`;
             csv += "========================================================================================\n\n";
-            csv += "No,Kode Outlet,Nama Toko / Outlet,Alamat Toko,No. HP WA,Tanggal Bergabung,Status Lisensi,Tanggal Aktivasi,Total Transaksi,Status Keaktifan\n";
+            csv += "No,Kode Outlet,Nama Toko / Outlet,Alamat Toko,No. HP WA,Status Lisensi,Kode Aktivasi Lisensi,Tanggal Aktivasi,Total Transaksi,Status Keaktifan\n";
 
             devices.forEach((d, i) => {
                 const tx = parseInt(d.txCount) || 0;
                 const status = tx > 50 ? "Sangat Aktif" : (tx > 0 ? "Aktif" : "Baru / Trial");
-                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storeAddress}","${d.storePhone}","${d.startDate}","${d.licenseType}","${d.activationDate}","${tx} Transaksi","${status}"\n`;
+                const actKey = generateKey(d.outletCode, d.licenseType === 'FREE TRIAL' ? 'PRO' : d.licenseType);
+                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storeAddress}","${d.storePhone}","${d.licenseType}","${actKey}","${d.activationDate}","${tx} Transaksi","${status}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -735,13 +809,14 @@
             csv += "WARUNGKU POS - LAPORAN ANALYTICS KINERJA DAN VOLUMETRIK TRANSABILITAS OUTLET\n";
             csv += `Tanggal Laporan: ${todayStr}\n`;
             csv += "========================================================================================\n\n";
-            csv += "No,Kode Outlet,Nama Toko,Nomor WhatsApp,Tanggal Bergabung,Tipe Lisensi,Total Volume Transaksi,Rata-rata Transaksi Harian,Status Keaktifan\n";
+            csv += "No,Kode Outlet,Nama Toko,Nomor WhatsApp,Tanggal Bergabung,Tipe Lisensi,Kode Aktivasi,Total Volume Transaksi,Rata-rata Transaksi Harian,Status Keaktifan\n";
 
             devices.forEach((d, i) => {
                 const tx = parseInt(d.txCount) || 0;
                 const avgDaily = Math.round(tx / 30);
                 const status = tx > 50 ? "Sangat Aktif" : (tx > 0 ? "Aktif" : "Baru / Trial");
-                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storePhone}","${d.startDate}","${d.licenseType}","${tx} Transaksi","~${avgDaily} Tx/Hari","${status}"\n`;
+                const actKey = generateKey(d.outletCode, d.licenseType === 'FREE TRIAL' ? 'PRO' : d.licenseType);
+                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storePhone}","${d.startDate}","${d.licenseType}","${actKey}","${tx} Transaksi","~${avgDaily} Tx/Hari","${status}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
