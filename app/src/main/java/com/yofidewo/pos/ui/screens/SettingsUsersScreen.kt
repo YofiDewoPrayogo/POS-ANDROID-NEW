@@ -1099,6 +1099,20 @@ fun OutletSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    val currentFirebaseUrl by viewModel.firebaseUrl.collectAsState()
+                    var customFirebaseUrlInput by remember(currentFirebaseUrl) { mutableStateOf(currentFirebaseUrl) }
+
+                    OutlinedTextField(
+                        value = customFirebaseUrlInput,
+                        onValueChange = { 
+                            customFirebaseUrlInput = it 
+                            viewModel.updateFirebaseUrl(it)
+                        },
+                        label = { Text("URL Server Cloud Firebase Realtime DB") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     val isProUnlocked by viewModel.isProUnlocked.collectAsState()
                     val currentLicenseKey by viewModel.storeLicense.collectAsState()
 

@@ -77,6 +77,11 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val deviceRole = MutableStateFlow(repository.getDeviceRole()) // "OWNER" or "KASIR"
     val isCloudSyncing = MutableStateFlow(false)
     val isLoading = MutableStateFlow(false)
+    val firebaseUrl = MutableStateFlow(repository.getFirebaseUrl())
+    fun updateFirebaseUrl(url: String) {
+        repository.setFirebaseUrl(url)
+        firebaseUrl.value = repository.getFirebaseUrl()
+    }
     val trialTransactionsLeft = MutableStateFlow(repository.getTrialTransactionsLeft())
     val isTrialExpired = MutableStateFlow(repository.isTrialExpired())
     val isProUnlocked = MutableStateFlow(repository.isProActivated())
@@ -194,6 +199,7 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     }
 
     init {
+        FirebaseSyncManager.firebaseUrl = repository.getFirebaseUrl()
         loadSavedLogo()
         seedInitialDataIfEmpty()
         deduplicateData()
