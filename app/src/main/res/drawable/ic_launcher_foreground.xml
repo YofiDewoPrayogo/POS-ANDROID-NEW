@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <group
+        android:pivotX="59.4"
+        android:pivotY="57.78"
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="-5.4"
+        android:translateY="-3.78">
+        
+        <!-- Orange Awning -->
+        <path
+            android:fillColor="#FF6600"
+            android:pathData="M 27 43.2 L 37.8 16.2 L 91.8 16.2 L 102.6 43.2 Z" />
+        <path
+            android:fillColor="#FF6600"
+            android:pathData="M 37.8 43.2 A 10.8 10.8 0 0 1 16.2 43.2 Z" />
+        <path
+            android:fillColor="#FF6600"
+            android:pathData="M 64.8 43.2 A 10.8 10.8 0 0 1 43.2 43.2 Z" />
+        <path
+            android:fillColor="#FF6600"
+            android:pathData="M 91.8 43.2 A 10.8 10.8 0 0 1 70.2 43.2 Z" />
+        
+        <!-- Leaf -->
+        <path
+            android:fillColor="#FF6600"
+            android:pathData="M 91.8 12.96 C 97.2 2.16 108 5.4 108 16.2 C 97.2 16.2 97.2 5.4 91.8 12.96 Z" />
+            
+        <!-- Blue Abacus Sides -->
+        <path
+            android:fillColor="#2563EB"
+            android:pathData="M 27 48.6 L 37.8 48.6 L 37.8 75.6 L 27 75.6 Z" />
+        <path
+            android:fillColor="#2563EB"
+            android:pathData="M 91.8 48.6 L 102.6 48.6 L 102.6 75.6 L 91.8 75.6 Z" />
+            
+        <!-- Blue Abacus Rods -->
+        <path
+            android:fillColor="#2563EB"
+            android:pathData="M 37.8 54 L 91.8 54 L 91.8 56.16 L 37.8 56.16 Z" />
+        <path
+            android:fillColor="#2563EB"
+            android:pathData="M 37.8 70.2 L 91.8 70.2 L 91.8 72.36 L 37.8 72.36 Z" />
+            
+        <!-- Beads Row 1 -->
+        <path android:fillColor="#FF6600" android:pathData="M 41 49.6 L 49.6 49.6 A 4.3 4.3 0 0 1 54 54 A 4.3 4.3 0 0 1 49.6 58.3 L 41 58.3 A 4.3 4.3 0 0 1 36.7 54 A 4.3 4.3 0 0 1 41 49.6 Z" />
+        <path android:fillColor="#FF6600" android:pathData="M 51.8 49.6 L 60.4 49.6 A 4.3 4.3 0 0 1 64.8 54 A 4.3 4.3 0 0 1 60.4 58.3 L 51.8 58.3 A 4.3 4.3 0 0 1 47.5 54 A 4.3 4.3 0 0 1 51.8 49.6 Z" />
+        <path android:fillColor="#2563EB" android:pathData="M 73.4 49.6 L 82 49.6 A 4.3 4.3 0 0 1 86.4 54 A 4.3 4.3 0 0 1 82 58.3 L 73.4 58.3 A 4.3 4.3 0 0 1 69.1 54 A 4.3 4.3 0 0 1 73.4 49.6 Z" />
+        <path android:fillColor="#2563EB" android:pathData="M 84.2 49.6 L 92.8 49.6 A 4.3 4.3 0 0 1 97.2 54 A 4.3 4.3 0 0 1 92.8 58.3 L 84.2 58.3 A 4.3 4.3 0 0 1 79.9 54 A 4.3 4.3 0 0 1 84.2 49.6 Z" />
+
+        <!-- Beads Row 2 -->
+        <path android:fillColor="#2563EB" android:pathData="M 41 65.8 L 49.6 65.8 A 4.3 4.3 0 0 1 54 70.2 A 4.3 4.3 0 0 1 49.6 74.5 L 41 74.5 A 4.3 4.3 0 0 1 36.7 70.2 A 4.3 4.3 0 0 1 41 65.8 Z" />
+        <path android:fillColor="#2563EB" android:pathData="M 51.8 65.8 L 60.4 65.8 A 4.3 4.3 0 0 1 64.8 70.2 A 4.3 4.3 0 0 1 60.4 74.5 L 51.8 74.5 A 4.3 4.3 0 0 1 47.5 70.2 A 4.3 4.3 0 0 1 51.8 65.8 Z" />
+        <path android:fillColor="#FF6600" android:pathData="M 73.4 65.8 L 82 65.8 A 4.3 4.3 0 0 1 86.4 70.2 A 4.3 4.3 0 0 1 82 74.5 L 73.4 74.5 A 4.3 4.3 0 0 1 69.1 70.2 A 4.3 4.3 0 0 1 73.4 65.8 Z" />
+        <path android:fillColor="#2563EB" android:pathData="M 84.2 65.8 L 92.8 65.8 A 4.3 4.3 0 0 1 97.2 70.2 A 4.3 4.3 0 0 1 92.8 74.5 L 84.2 74.5 A 4.3 4.3 0 0 1 79.9 70.2 A 4.3 4.3 0 0 1 84.2 65.8 Z" />
+
+        <!-- Orange Smile Bottom -->
+        <path
+            android:fillColor="#FF6600"
+            android:pathData="M 27 77.7 C 27 102.6 102.6 102.6 102.6 77.7 Z" />
+        
+        <!-- White Smile curve -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="4.3"
+            android:strokeLineCap="round"
+            android:pathData="M 48.6 86.4 C 64.8 97.2 81 86.4 81 86.4" />
+            
+        <!-- Blue Coin -->
+        <path
+            android:fillColor="#2563EB"
+            android:pathData="M 102.6 91.8 A 16.2 16.2 0 1 1 70.2 91.8 A 16.2 16.2 0 1 1 102.6 91.8 Z" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2.16"
+            android:pathData="M 100.4 91.8 A 14.04 14.04 0 1 1 72.36 91.8 A 14.04 14.04 0 1 1 100.4 91.8 Z" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3.24"
+            android:strokeLineCap="round"
+            android:pathData="M 90.7 84.2 C 82 81 82 88.5 90.7 91.8 C 99.3 95 90.7 102.6 82 99.3" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2.16"
+            android:pathData="M 86.4 81 L 86.4 102.6" />
+    </group>
+</vector>

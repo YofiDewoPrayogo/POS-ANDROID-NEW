@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WarungKu</string>
+    <string name="default_error_message">Error</string>
+    <string name="navigation_menu">Menu</string>
+    <string name="close_drawer">Tutup Menu</string>
+    <string name="close_sheet">Tutup Lembar</string>
+    <string name="default_popup_window_title">Jendela Munculan</string>
+    <string name="dropdown_menu">Menu Tarik-Turun</string>
+    <string name="in_progress">Sedang Diproses</string>
+    <string name="indeterminate">Tidak Ditentukan</string>
+    <string name="not_selected">Tidak Dipilih</string>
+    <string name="selected">Dipilih</string>
+    <string name="template_percent">Persen Template</string>
+    <string name="tooltip_description">Deskripsi Tooltip</string>
+    <string name="tooltip_label">Label Tooltip</string>
+</resources>
