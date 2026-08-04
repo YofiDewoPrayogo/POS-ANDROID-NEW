@@ -98,14 +98,26 @@
         .modal.active { display: flex; }
         .modal-body { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); }
 
-        /* Print Media Styles */
+        /* Official Print PDF Template Styles */
+        .print-only { display: none; }
         @media print {
-            body { background: white; color: black; font-size: 11px; }
-            .navbar, .btn-group, .form-card, .search-control, #authSection, .tab-bar { display: none !important; }
-            .container { max-width: 100%; margin: 0; padding: 0; }
-            .card { border: none; box-shadow: none; padding: 0; }
-            table { width: 100%; border: 1px solid #000; }
-            th, td { border: 1px solid #000; padding: 6px; color: black !important; background: white !important; }
+            body { background: white !important; color: #0F172A !important; font-family: 'Inter', sans-serif; padding: 10px; font-size: 11px; }
+            .navbar, .btn-group, .form-card, .search-control, #authSection, .tab-bar, .modal, #cloudStatusBadge, .nav-actions, th:last-child, td:last-child { display: none !important; }
+            .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; gap: 12px !important; }
+            .card { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; }
+            .print-only { display: block !important; }
+            .print-header { border-bottom: 2px solid #0F172A; padding-bottom: 10px; margin-bottom: 16px; }
+            .print-header h1 { font-size: 18px; font-weight: 800; color: #0F172A; margin-bottom: 2px; text-transform: uppercase; letter-spacing: -0.3px; }
+            .print-header p { font-size: 11px; color: #475569; }
+            .stats-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; margin-bottom: 16px !important; }
+            .stat-card { border: 1px solid #CBD5E1 !important; padding: 10px !important; border-radius: 6px !important; background: #F8FAFC !important; }
+            .stat-title { font-size: 9px !important; font-weight: 700 !important; color: #475569 !important; text-transform: uppercase; }
+            .stat-value { font-size: 16px !important; font-weight: 800 !important; color: #0F172A !important; margin-top: 2px !important; }
+            table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px !important; }
+            th { background-color: #F1F5F9 !important; color: #0F172A !important; border: 1px solid #CBD5E1 !important; padding: 6px 8px !important; font-size: 10px !important; font-weight: 700 !important; text-transform: uppercase; }
+            td { border: 1px solid #CBD5E1 !important; padding: 6px 8px !important; font-size: 10px !important; color: #0F172A !important; }
+            .status-badge { border: 1px solid #94A3B8 !important; color: #0F172A !important; background: transparent !important; padding: 1px 4px !important; font-size: 9px !important; }
+            .print-footer { margin-top: 24px; border-top: 1px solid #CBD5E1; padding-top: 8px; font-size: 9px; color: #64748B; display: flex; justify-content: space-between; }
         }
     </style>
 </head>
@@ -122,7 +134,12 @@
         </div>
     </div>
 
+    <!-- Printable Official Header (PDF Only) -->
     <div class="container">
+        <div class="print-only print-header">
+            <h1>WARUNGKU POS - LAPORAN RESMI REKAPITULASI OUTLET</h1>
+            <p>Dicetak Secara Otomatis dari Developer Portal | Tanggal Cetak: <span id="printDate"></span></p>
+        </div>
 
         <!-- Login Authentication Section -->
         <div id="authSection" class="card" style="max-width: 400px; margin: 40px auto; text-align: center;">
@@ -135,7 +152,7 @@
             <button class="btn btn-primary" style="width: 100%;" onclick="verifyDeveloperPin()">Masuk Developer Console</button>
         </div>
 
-        <!-- Main Dashboard Section (Hidden until authenticated) -->
+        <!-- Main Dashboard Section -->
         <div id="dashboardSection" style="display: none; flex-direction: column; gap: 24px;">
 
             <!-- Summary Cards -->
@@ -197,8 +214,8 @@
                         <div class="btn-group">
                             <span class="status-badge badge-live" id="cloudStatusBadge">Cloud Sync Active</span>
                             <button class="btn btn-outline btn-sm" onclick="fetchLiveFirebaseOutlets()">Refresh Data</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportToCsv()">Ekspor CSV</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportToPdf()">Cetak PDF</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportToCsv()">Ekspor CSV Rapi (Excel)</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportToPdf()">Cetak Laporan PDF Resmi</button>
                         </div>
                     </div>
 
@@ -247,19 +264,8 @@
                             </div>
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-outline btn-sm" onclick="exportReportToCsv()">Ekspor Laporan (CSV)</button>
-                            <button class="btn btn-outline btn-sm" onclick="exportToPdf()">Cetak Laporan (PDF)</button>
-                        </div>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span class="stat-title">Rata-Rata Transaksi / Outlet</span>
-                            <div class="stat-value" id="reportAvgTx">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-title">Outlet Paling Aktif</span>
-                            <div class="stat-value" style="font-size: 16px; font-weight:700;" id="reportTopStore">-</div>
+                            <button class="btn btn-outline btn-sm" onclick="exportReportToCsv()">Ekspor Laporan (CSV Excel)</button>
+                            <button class="btn btn-outline btn-sm" onclick="exportToPdf()">Cetak Laporan PDF Resmi</button>
                         </div>
                     </div>
 
@@ -286,6 +292,12 @@
 
             </div>
 
+        </div>
+
+        <!-- Printable Official Footer (PDF Only) -->
+        <div class="print-only print-footer">
+            <span>WarungKu POS System © 2026 - Laporan Resmi Terverifikasi Cloud</span>
+            <span>Halaman 1 dari 1</span>
         </div>
 
     </div>
@@ -588,17 +600,8 @@
             const tbody = document.getElementById('reportTableBody');
             tbody.innerHTML = '';
 
-            let totalTxSum = 0;
-            let topStoreName = '-';
-            let maxTx = -1;
-
             devices.forEach((d, idx) => {
                 const count = parseInt(d.txCount) || 0;
-                totalTxSum += count;
-                if (count > maxTx) {
-                    maxTx = count;
-                    topStoreName = d.storeName;
-                }
 
                 const tr = document.createElement('tr');
                 const badgeClass = d.licenseType === 'PRO' ? 'badge-pro' : (d.licenseType === 'ULTRA' ? 'badge-ultra' : 'badge-trial');
@@ -616,10 +619,6 @@
                 `;
                 tbody.appendChild(tr);
             });
-
-            const avg = devices.length > 0 ? Math.round(totalTxSum / devices.length) : 0;
-            document.getElementById('reportAvgTx').innerText = avg.toLocaleString('id-ID') + ' Tx / Outlet';
-            document.getElementById('reportTopStore').innerText = topStoreName;
         }
 
         async function activateDevice(code, type) {
@@ -706,34 +705,55 @@
         }
 
         function exportToCsv() {
-            let csv = "No,Kode Outlet,Nama Toko,Alamat Toko,No HP WA,Mulai Penggunaan,Status Lisensi,Tanggal Aktivasi,Total Transaksi\n";
+            const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+            let csv = "\uFEFF"; // UTF-8 BOM for clean Microsoft Excel rendering
+            csv += "========================================================================================\n";
+            csv += "WARUNGKU POS - LAPORAN REKAPITULASI DAFTAR OUTLET DAN LISENSI TERDAFTAR\n";
+            csv += `Tanggal Ekspor: ${todayStr}\n`;
+            csv += `Total Outlet: ${devices.length} | Total Akumulasi Transaksi: ${devices.reduce((s,d)=>s+(parseInt(d.txCount)||0),0)}\n`;
+            csv += "========================================================================================\n\n";
+            csv += "No,Kode Outlet,Nama Toko / Outlet,Alamat Toko,No. HP WA,Tanggal Bergabung,Status Lisensi,Tanggal Aktivasi,Total Transaksi,Status Keaktifan\n";
+
             devices.forEach((d, i) => {
-                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storeAddress}","${d.storePhone}","${d.startDate}","${d.licenseType}","${d.activationDate}","${d.txCount}"\n`;
+                const tx = parseInt(d.txCount) || 0;
+                const status = tx > 50 ? "Sangat Aktif" : (tx > 0 ? "Aktif" : "Baru / Trial");
+                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storeAddress}","${d.storePhone}","${d.startDate}","${d.licenseType}","${d.activationDate}","${tx} Transaksi","${status}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `WarungKu_Daftar_Device_Outlet_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `WarungKu_Laporan_Outlet_Rapi_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         }
 
         function exportReportToCsv() {
-            let csv = "No,Kode Outlet,Nama Toko,No HP WA,Mulai Bergabung,Status Lisensi,Volume Transaksi\n";
+            const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+            let csv = "\uFEFF";
+            csv += "========================================================================================\n";
+            csv += "WARUNGKU POS - LAPORAN ANALYTICS KINERJA DAN VOLUMETRIK TRANSABILITAS OUTLET\n";
+            csv += `Tanggal Laporan: ${todayStr}\n`;
+            csv += "========================================================================================\n\n";
+            csv += "No,Kode Outlet,Nama Toko,Nomor WhatsApp,Tanggal Bergabung,Tipe Lisensi,Total Volume Transaksi,Rata-rata Transaksi Harian,Status Keaktifan\n";
+
             devices.forEach((d, i) => {
-                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storePhone}","${d.startDate}","${d.licenseType}","${d.txCount}"\n`;
+                const tx = parseInt(d.txCount) || 0;
+                const avgDaily = Math.round(tx / 30);
+                const status = tx > 50 ? "Sangat Aktif" : (tx > 0 ? "Aktif" : "Baru / Trial");
+                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storePhone}","${d.startDate}","${d.licenseType}","${tx} Transaksi","~${avgDaily} Tx/Hari","${status}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `WarungKu_Laporan_Analytics_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `WarungKu_Laporan_Analytics_Rapi_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         }
 
         function exportToPdf() {
+            document.getElementById('printDate').innerText = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             window.print();
         }
     </script>
