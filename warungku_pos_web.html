@@ -106,7 +106,7 @@
             🛡️ WarungKu POS <span>Portal Aktivasi & Monitoring Live</span>
         </div>
         <div style="display:flex; align-items:center; gap: 12px;">
-            <button class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; display:none;" onclick="openPinModal()" id="btnSettingsPin">⚙️ Pengaturan PIN</button>
+            <button class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3); padding: 6px 12px; font-size: 12px; display:none;" onclick="openPinModal()" id="btnSettingsPin">⚙️ Pengaturan PIN & Database</button>
             <div class="pro-badge">PORTAL DEVELOPER</div>
         </div>
     </div>
@@ -152,7 +152,7 @@
             <div class="card form-card">
                 <div class="card-header">
                     <div class="card-title">🔑 Generator Kunci Aktivasi Lisensi</div>
-                    <button class="btn btn-outline" style="font-size: 12px; padding: 6px 12px;" onclick="openPinModal()">⚙️ Ubah PIN Master</button>
+                    <button class="btn btn-outline" style="font-size: 12px; padding: 6px 12px;" onclick="openPinModal()">⚙️ Pengaturan PIN & Database</button>
                 </div>
                 <div class="form-grid">
                     <div class="input-group">
@@ -178,7 +178,8 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <span class="live-dot"></span> 📱 Daftar Outlet & Device Terdaftar (Real-time Live Sync)
+                        <span class="live-dot" id="cloudStatusDot"></span> 📱 Daftar Outlet & Device Terdaftar
+                        <span id="cloudStatusBadge" style="font-size: 11px; margin-left: 6px; padding: 2px 8px; border-radius: 10px; background: #E2E8F0; color: #475569;">Cek Sync Cloud...</span>
                     </div>
                     <div class="btn-group">
                         <button class="btn btn-outline" onclick="fetchLiveFirebaseOutlets()" style="font-size: 12px; padding: 6px 12px;">🔄 Refresh Realtime</button>
@@ -241,33 +242,41 @@
         </div>
     </div>
 
-    <!-- Modal Pengaturan PIN Master Developer -->
+    <!-- Modal Pengaturan PIN & Database -->
     <div class="modal" id="pinModal">
         <div class="modal-body">
-            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">⚙️ Ubah PIN Master Developer</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Ubah PIN untuk mengamankan akses ke Portal Developer.</p>
-            <div class="input-group" style="margin-bottom: 12px;">
-                <label>PIN Master Saat Ini</label>
-                <input type="password" class="input-control" id="currentPinInput" placeholder="••••••">
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">⚙️ Ubah PIN Master & URL Database</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Kelola PIN akses portal dan URL Firebase Realtime Database Anda.</p>
+            
+            <div style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <label>PIN Master Saat Ini</label>
+                    <input type="password" class="input-control" id="currentPinInput" placeholder="••••••">
+                </div>
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <label>PIN Master Baru</label>
+                    <input type="password" class="input-control" id="newPinInput" placeholder="••••••">
+                </div>
+                <div class="input-group">
+                    <label>Konfirmasi PIN Master Baru</label>
+                    <input type="password" class="input-control" id="confirmPinInput" placeholder="••••••">
+                </div>
             </div>
-            <div class="input-group" style="margin-bottom: 12px;">
-                <label>PIN Master Baru</label>
-                <input type="password" class="input-control" id="newPinInput" placeholder="••••••">
-            </div>
+
             <div class="input-group" style="margin-bottom: 16px;">
-                <label>Konfirmasi PIN Master Baru</label>
-                <input type="password" class="input-control" id="confirmPinInput" placeholder="••••••">
+                <label>URL Firebase Realtime Database (Opsional Kustom)</label>
+                <input type="text" class="input-control" id="firebaseUrlInput" placeholder="https://your-app-default-rtdb.firebaseio.com">
+                <small style="font-size: 11px; color: var(--text-muted);">Masukkan URL Firebase Realtime DB Anda sendiri jika ingin melakukan sinkronisasi langsung dengan server Cloud kustom.</small>
             </div>
+
             <div class="btn-group" style="justify-content: flex-end;">
                 <button class="btn btn-outline" onclick="closePinModal()">Batal</button>
-                <button class="btn btn-primary" onclick="saveNewMasterPin()">Simpan PIN Baru</button>
+                <button class="btn btn-primary" onclick="saveNewMasterPin()">Simpan Perubahan</button>
             </div>
         </div>
     </div>
 
     <script>
-        const FIREBASE_DB_URL = "https://warungku-pos-default-rtdb.firebaseio.com";
-
         const initialDevices = [
             {
                 outletCode: "POS-88219",
@@ -293,6 +302,7 @@
 
         let devices = JSON.parse(localStorage.getItem('warungku_registered_devices')) || initialDevices;
         let masterPin = localStorage.getItem('warungku_master_pin') || '911911';
+        let firebaseDbUrl = localStorage.getItem('warungku_firebase_url') || 'https://warungku-pos-default-rtdb.firebaseio.com';
 
         function saveDevicesToStorage() {
             localStorage.setItem('warungku_registered_devices', JSON.stringify(devices));
@@ -304,6 +314,7 @@
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('dashboardSection').style.display = 'flex';
                 document.getElementById('btnSettingsPin').style.display = 'inline-flex';
+                document.getElementById('firebaseUrlInput').value = firebaseDbUrl;
                 fetchLiveFirebaseOutlets();
                 setInterval(fetchLiveFirebaseOutlets, 5000);
             } else {
@@ -312,6 +323,7 @@
         }
 
         function openPinModal() {
+            document.getElementById('firebaseUrlInput').value = firebaseDbUrl;
             document.getElementById('pinModal').classList.add('active');
         }
 
@@ -323,31 +335,40 @@
             const currentPin = document.getElementById('currentPinInput').value.trim();
             const newPin = document.getElementById('newPinInput').value.trim();
             const confirmPin = document.getElementById('confirmPinInput').value.trim();
+            const customDbUrl = document.getElementById('firebaseUrlInput').value.trim();
 
-            if (currentPin !== masterPin && currentPin !== '911911') {
-                alert('❌ PIN Master Saat Ini salah!');
-                return;
+            if (customDbUrl) {
+                firebaseDbUrl = customDbUrl;
+                localStorage.setItem('warungku_firebase_url', firebaseDbUrl);
             }
 
-            if (!newPin || newPin.length < 4) {
-                alert('❌ PIN Master Baru minimal 4 karakter!');
-                return;
+            if (newPin) {
+                if (currentPin !== masterPin && currentPin !== '911911') {
+                    alert('❌ PIN Master Saat Ini salah!');
+                    return;
+                }
+                if (newPin.length < 4) {
+                    alert('❌ PIN Master Baru minimal 4 karakter!');
+                    return;
+                }
+                if (newPin !== confirmPin) {
+                    alert('❌ Konfirmasi PIN Master Baru tidak cocok!');
+                    return;
+                }
+                masterPin = newPin;
+                localStorage.setItem('warungku_master_pin', masterPin);
             }
 
-            if (newPin !== confirmPin) {
-                alert('❌ Konfirmasi PIN Master Baru tidak cocok!');
-                return;
-            }
-
-            masterPin = newPin;
-            localStorage.setItem('warungku_master_pin', masterPin);
             closePinModal();
-            alert('🎉 PIN Master Developer berhasil diubah!');
+            fetchLiveFirebaseOutlets();
+            alert('🎉 Pengaturan berhasil disimpan!');
         }
 
         async function fetchLiveFirebaseOutlets() {
+            const statusBadge = document.getElementById('cloudStatusBadge');
+
             try {
-                const res = await fetch(`${FIREBASE_DB_URL}/outlets.json`);
+                const res = await fetch(`${firebaseDbUrl}/outlets.json`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data) {
@@ -378,9 +399,24 @@
                         });
                         saveDevicesToStorage();
                     }
+                    if (statusBadge) {
+                        statusBadge.innerText = "🟢 Cloud Sync Live Active";
+                        statusBadge.style.background = "#D1FAE5";
+                        statusBadge.style.color = "#065F46";
+                    }
+                } else {
+                    if (statusBadge) {
+                        statusBadge.innerText = "🟡 Mode Lokal (Set URL Database)";
+                        statusBadge.style.background = "#FEF3C7";
+                        statusBadge.style.color = "#92400E";
+                    }
                 }
             } catch (err) {
-                console.warn("Notice: Real-time fetch from Firebase:", err);
+                if (statusBadge) {
+                    statusBadge.innerText = "🟡 Mode Lokal / Offline Ready";
+                    statusBadge.style.background = "#FEF3C7";
+                    statusBadge.style.color = "#92400E";
+                }
             }
             renderDashboard();
         }
@@ -465,7 +501,7 @@
             }
 
             try {
-                await fetch(`${FIREBASE_DB_URL}/outlets/${code}/profile.json`, {
+                await fetch(`${firebaseDbUrl}/outlets/${code}/profile.json`, {
                     method: 'PATCH',
                     body: JSON.stringify({ licenseType: type, activationDate: today })
                 });
@@ -489,7 +525,7 @@
             const name = document.getElementById('modalStoreName').value.trim();
             const address = document.getElementById('modalStoreAddress').value.trim();
             const phone = document.getElementById('modalStorePhone').value.trim();
-            let code = document.getElementById('modalOutletCode').value.trim().toUpperCase();
+            let code = document.getElementById('modalOutletCode').value.trim().uppercase();
 
             if (!name || !address || !phone) {
                 alert('Nama Toko, Alamat, dan No. HP/WA WAJIB diisi!');
@@ -515,7 +551,7 @@
             saveDevicesToStorage();
 
             try {
-                await fetch(`${FIREBASE_DB_URL}/outlets/${code}/profile.json`, {
+                await fetch(`${firebaseDbUrl}/outlets/${code}/profile.json`, {
                     method: 'PUT',
                     body: JSON.stringify({
                         code: code,
