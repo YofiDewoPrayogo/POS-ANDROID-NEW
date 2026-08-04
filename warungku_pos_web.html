@@ -620,6 +620,7 @@
                         <div class="btn-group">
                             <button class="btn btn-primary btn-sm" onclick="activateDevice('${d.outletCode}', 'PRO')">Set PRO</button>
                             <button class="btn btn-outline btn-sm" onclick="activateDevice('${d.outletCode}', 'ULTRA')">Set ULTRA</button>
+                            <button class="btn btn-sm" style="background:#EF4444; color:#FFF; border:none; padding:4px 8px; font-weight:600; border-radius:6px; cursor:pointer;" onclick="deleteOutlet('${d.outletCode}')">Hapus</button>
                         </div>
                     </td>
                 `;
@@ -651,6 +652,28 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        async function deleteOutlet(code) {
+            const dev = devices.find(d => d.outletCode === code);
+            const storeName = dev ? dev.storeName : code;
+            if (!confirm(`Apakah Anda yakin ingin menghapus outlet "${storeName}" (${code}) dari database? Semua data outlet di cloud akan dihapus.`)) {
+                return;
+            }
+
+            devices = devices.filter(d => d.outletCode !== code);
+            saveDevicesToStorage();
+            renderDashboard();
+
+            try {
+                await fetch(`${firebaseDbUrl}/outlets/${code}.json`, {
+                    method: 'DELETE'
+                });
+                alert(`Outlet "${storeName}" (${code}) berhasil dihapus dari Firebase Realtime Database.`);
+            } catch (e) {
+                console.error("Notice deleting Firebase outlet:", e);
+                alert(`Gagal menghapus dari cloud: ${e.message}`);
+            }
         }
 
         async function activateDevice(code, type) {
