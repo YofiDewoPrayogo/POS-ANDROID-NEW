@@ -685,7 +685,7 @@
             document.getElementById('actModalKey').value = key;
 
             const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
-            const waMsg = encodeURIComponent(`Halo ${name},\nBerikut Kode Aktivasi Lisensi ${type} WarungKu POS Anda:\n\nKode Aktivasi: ${key}\n\nSilakan masukkan kode ini di menu Pengaturan -> Aktivasi Toko pada aplikasi Android Anda. Terima kasih!`);
+            const waMsg = encodeURIComponent(`Halo ${name}, Berikut Kode Aktivasi Lisensi WarungKu POS Anda: ${key}. Silakan masukkan kode ini di menu Pengaturan -> Aktivasi Toko pada aplikasi Android Anda. Terima kasih!`);
             
             const waBtn = document.getElementById('actModalWaBtn');
             if (cleanPhone) {
