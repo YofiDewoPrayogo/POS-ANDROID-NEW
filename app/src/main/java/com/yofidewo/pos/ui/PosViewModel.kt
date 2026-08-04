@@ -646,6 +646,14 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
             val savedTx = transaction.copy(id = id)
 
             repository.incrementTransactionCount()
+            // Ensure FirebaseSyncManager knows which outlet we are processing
+            com.yofidewo.pos.data.FirebaseSyncManager.currentOutletCode = outletCode.value
+            // Update transaction count in Firebase profile for real‑time sync
+            val newCount = repository.getTransactionCount()
+            com.yofidewo.pos.data.FirebaseSyncManager.updateOutletMetadata(
+                code = com.yofidewo.pos.data.FirebaseSyncManager.currentOutletCode,
+                txCount = newCount
+            )
             trialTransactionsLeft.value = repository.getTrialTransactionsLeft()
             isTrialExpired.value = repository.isTrialExpired()
 
