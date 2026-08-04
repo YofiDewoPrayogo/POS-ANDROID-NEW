@@ -182,7 +182,7 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "Aplikasi Aktif (Lisensi: $licenseTier)",
+                                        text = "ACTIVATION LISENSI $licenseTier",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF2E7D32)
@@ -319,7 +319,7 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "Aktif (Lisensi: $licenseTier)",
+                                        text = "ACTIVATION LISENSI $licenseTier",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF2E7D32)
