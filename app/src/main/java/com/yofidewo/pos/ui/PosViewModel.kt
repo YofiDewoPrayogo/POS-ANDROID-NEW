@@ -81,8 +81,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val isTrialExpired = MutableStateFlow(repository.isTrialExpired())
     val isProUnlocked = MutableStateFlow(repository.isProActivated())
 
-    fun generateDeveloperKey(targetOutletCode: String): String {
-        return repository.generateActivationKeyForOutlet(targetOutletCode)
+    fun generateDeveloperKey(targetOutletCode: String, type: String = "PRO"): String {
+        return repository.generateActivationKeyForOutlet(targetOutletCode, type)
     }
 
     fun activateProKey(key: String): Boolean {

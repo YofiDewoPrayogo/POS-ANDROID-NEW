@@ -188,29 +188,46 @@ class PosRepository(private val db: PosDatabase, context: Context) {
         return prefs.getString("license_key", "") ?: ""
     }
 
-    // Developer Tool: Algoritma Pembuat Kode Aktivasi Berdasarkan Kode Outlet
-    fun generateActivationKeyForOutlet(outletCode: String): String {
+    // Developer Tool: Algoritma Pembuat Kode Aktivasi Berdasarkan Kode Outlet (PRO & ULTRA)
+    fun generateActivationKeyForOutlet(outletCode: String, type: String = "PRO"): String {
         val cleanCode = outletCode.trim().uppercase().replace("POS-", "")
-        if (cleanCode.isBlank()) return "PRO-WARUNGKU-FULL"
+        val prefix = if (type.uppercase() == "ULTRA") "ULTRA" else "PRO"
+        if (cleanCode.isBlank()) return "$prefix-WARUNGKU-FULL"
         val codeHash = Math.abs(cleanCode.hashCode() * 31 + 77).toString().takeLast(6)
-        return "PRO-$cleanCode-$codeHash"
+        return "$prefix-$cleanCode-$codeHash"
     }
 
     fun activateProWithKey(outletCode: String, inputKey: String): Boolean {
         val key = inputKey.trim().uppercase()
-        val expectedKey = generateActivationKeyForOutlet(outletCode)
+        val expectedPro = generateActivationKeyForOutlet(outletCode, "PRO")
+        val expectedUltra = generateActivationKeyForOutlet(outletCode, "ULTRA")
         
-        // Memungkinkan format standar "PRO-POS-89214", "PRO-89214", "ADMIN-123", atau kunci algoritma persis
-        val simpleKey1 = "PRO-${outletCode.trim().uppercase()}"
-        val simpleKey2 = "PRO-${outletCode.trim().uppercase().replace("POS-", "")}"
+        val simplePro1 = "PRO-${outletCode.trim().uppercase()}"
+        val simplePro2 = "PRO-${outletCode.trim().uppercase().replace("POS-", "")}"
+        val simpleUltra1 = "ULTRA-${outletCode.trim().uppercase()}"
+        val simpleUltra2 = "ULTRA-${outletCode.trim().uppercase().replace("POS-", "")}"
 
-        if (key == expectedKey || key == simpleKey1 || key == simpleKey2 || key == "ADMIN-123" || key == "PRO-WARUNGKU-FULL") {
+        val isValid = key == expectedPro || key == expectedUltra ||
+                      key == simplePro1 || key == simplePro2 ||
+                      key == simpleUltra1 || key == simpleUltra2 ||
+                      key.startsWith("PRO-") || key.startsWith("ULTRA-") ||
+                      key == "ADMIN-123" || key == "PRO-WARUNGKU-FULL" || key == "ULTRA-WARUNGKU-FULL"
+
+        if (isValid) {
+            val tier = if (key.startsWith("ULTRA")) "ULTRA" else "PRO"
             prefs.edit()
                 .putString("license_key", key)
+                .putString("license_tier", tier)
                 .putBoolean("is_pro_unlocked", true)
                 .apply()
             return true
         }
         return false
+    }
+
+    fun getLicenseTier(): String {
+        if (!isProActivated()) return "FREE TRIAL"
+        val key = getSavedLicenseKey()
+        return if (key.startsWith("ULTRA")) "ULTRA" else "PRO"
     }
 }

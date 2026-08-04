@@ -184,8 +184,8 @@ fun OutletSetupScreen(
 
                         Button(
                             onClick = {
-                                if (storeName.isBlank()) {
-                                    Toast.makeText(context, "Nama toko wajib diisi!", Toast.LENGTH_SHORT).show()
+                                if (storeName.isBlank() || storeAddress.isBlank() || storePhone.isBlank()) {
+                                    Toast.makeText(context, "Nama toko, Alamat, dan No. HP/WA WAJIB diisi!", Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
                                 isLoading = true

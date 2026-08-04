@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WarungKu POS Web - Offline & Online</title>
+    <title>WarungKu POS - Activation & License Management Portal</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="WarungKu POS">
+    <meta name="apple-mobile-web-app-title" content="WarungKu Activation">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/869/869636.png">
     <style>
         :root {
@@ -20,66 +20,80 @@
             --text-muted: #64748B;
             --border: #E2E8F0;
             --success: #10B981;
+            --purple: #8B5CF6;
             --danger: #EF4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #F1F5F9; color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { background-color: #F1F5F9; color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; }
 
         /* Header Bar */
-        .header { background-color: var(--secondary); color: white; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        .header-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--primary); }
-        .header-title span { color: white; font-weight: 400; font-size: 14px; opacity: 0.8; }
-        .pro-badge { background: linear-gradient(135deg, #FF6600, #F59E0B); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+        .header { background-color: var(--secondary); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .header-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; color: var(--primary); }
+        .header-title span { color: white; font-weight: 400; font-size: 14px; opacity: 0.85; }
+        .pro-badge { background: linear-gradient(135deg, #FF6600, #F59E0B); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
 
-        /* Navigation Bar Bottom (iOS Style) */
-        .nav-bar { background-color: white; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; font-size: 11px; font-weight: 600; border: none; background: none; cursor: pointer; flex: 1; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+        /* Main Layout */
+        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
 
-        /* Main Content Container */
-        .content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-        .tab-page { display: none; flex-direction: column; gap: 16px; height: 100%; }
-        .tab-page.active { display: flex; }
+        /* Cards */
+        .card { background: white; border-radius: 16px; padding: 24px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--secondary); display: flex; align-items: center; gap: 8px; }
 
-        /* Cards & Surfaces */
-        .card { background: white; border-radius: 16px; padding: 16px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
-        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-
-        /* Input Controls */
-        .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-        .input-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-        .input-control { padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 14px; outline: none; transition: all 0.2s; }
+        /* Forms & Inputs */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .input-control { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-size: 14px; outline: none; transition: all 0.2s; }
         .input-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,102,0,0.15); }
 
         /* Buttons */
-        .btn { padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; text-decoration: none; }
-        .btn:active { opacity: 0.85; }
+        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn { padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s, transform 0.1s; text-decoration: none; }
+        .btn:active { transform: scale(0.98); }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-secondary { background-color: var(--secondary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-purple { background-color: var(--purple); color: white; }
         .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-dark); }
         .btn-danger { background-color: var(--danger); color: white; }
 
-        /* Products Grid */
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-        .product-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
-        .product-card:active { transform: scale(0.97); }
-        .product-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
-        .product-price { font-size: 14px; font-weight: 800; color: var(--primary); }
-        .product-stock { font-size: 11px; color: var(--text-muted); }
+        /* Responsive Table */
+        .table-responsive { overflow-x: auto; margin-top: 16px; border-radius: 12px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { background-color: var(--secondary); color: white; padding: 14px; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:nth-child(even) { background-color: #F8FAFC; }
+        tr:hover { background-color: #F1F5F9; }
 
-        /* Cart Floating Footer */
-        .cart-bar { background-color: var(--secondary); color: white; padding: 12px 16px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; margin-top: auto; cursor: pointer; }
-        .cart-info { display: flex; flex-direction: column; }
-        .cart-total { font-weight: 800; font-size: 16px; }
-        .cart-count { font-size: 12px; opacity: 0.8; }
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-block; }
+        .badge-pro { background-color: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
+        .badge-ultra { background-color: #EDE9FE; color: #6D28D9; border: 1px solid #DDD6FE; }
+        .badge-trial { background-color: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
+
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 14px; padding: 18px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+        .stat-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .stat-value { font-size: 26px; font-weight: 800; color: var(--secondary); }
 
         /* Modal Overlay */
         .modal { display: none; position: fixed; inset: 0; background-color: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-body { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; animation: popUp 0.2s ease-out; }
-        @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-body { background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+        /* Print Media Styles for PDF */
+        @media print {
+            body { background: white; color: black; }
+            .header, .btn-group, .form-card, .stats-grid, #authSection { display: none !important; }
+            .container { max-width: 100%; margin: 0; padding: 0; }
+            .card { border: none; box-shadow: none; padding: 0; }
+            table { width: 100%; border: 1px solid #000; }
+            th, td { border: 1px solid #000; padding: 8px; color: black !important; background: white !important; }
+            .badge { border: none; color: black !important; background: transparent !important; }
+        }
     </style>
 </head>
 <body>
@@ -87,283 +101,185 @@
     <!-- Header -->
     <div class="header">
         <div class="header-title">
-            🛒 WarungKu <span>POS Web (iOS & Android)</span>
+            🛡️ WarungKu POS <span>Portal Aktivasi & Manajemen Lisensi</span>
         </div>
-        <div class="pro-badge" id="proStatusBadge">VERSI PRO</div>
+        <div class="pro-badge">PORTAL DEVELOPER</div>
     </div>
 
-    <!-- Main Content Pages -->
-    <div class="content">
-        <!-- Kasir Tab -->
-        <div class="tab-page active" id="tab-kasir">
-            <input type="text" class="input-control" id="searchProductInput" placeholder="🔍 Cari Produk (Nama / Kode / Barcode)..." onkeyup="renderProducts()">
-            
-            <div class="product-grid" id="productGridList">
-                <!-- Products dynamically rendered -->
-            </div>
+    <div class="container">
 
-            <div class="cart-bar" onclick="openCartModal()">
-                <div class="cart-info">
-                    <span class="cart-count" id="cartCountLabel">0 Item dalam Keranjang</span>
-                    <span class="cart-total" id="cartTotalLabel">Rp 0</span>
-                </div>
-                <button class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">BAYAR ➔</button>
+        <!-- Login Authentication Section -->
+        <div id="authSection" class="card" style="max-width: 440px; margin: 40px auto; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+            <h2 style="font-size: 20px; margin-bottom: 6px;">Autentikasi Master Developer</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Masukkan PIN Master Developer untuk mengelola lisensi dan device terdaftar.</p>
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label>PIN Master Developer (Default: 911911)</label>
+                <input type="password" class="input-control" id="masterPinInput" placeholder="••••••" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
             </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="verifyDeveloperPin()">Masuk Portal Developer ➔</button>
         </div>
 
-        <!-- Katalog Produk Tab -->
-        <div class="tab-page" id="tab-produk">
-            <div class="card">
-                <div class="card-title">
-                    <span>📦 Katalog Produk</span>
-                    <button class="btn btn-primary" onclick="openAddProductModal()" style="padding: 6px 12px; font-size: 12px;">+ Tambah</button>
+        <!-- Main Dashboard Section (Hidden until authenticated) -->
+        <div id="dashboardSection" style="display: none; flex-direction: column; gap: 24px;">
+
+            <!-- Summary Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-title">Total Device / Outlet</span>
+                    <span class="stat-value" id="statTotalDevices">0</span>
                 </div>
-                <div id="manageProductList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                <div class="stat-card">
+                    <span class="stat-title">Lisensi PRO Aktif</span>
+                    <span class="stat-value" style="color: #D97706;" id="statProDevices">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Lisensi ULTRA Aktif</span>
+                    <span class="stat-value" style="color: #6D28D9;" id="statUltraDevices">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Total Transaksi Seluruh Outlet</span>
+                    <span class="stat-value" style="color: var(--primary);" id="statTotalTransactions">0</span>
+                </div>
             </div>
+
+            <!-- License Key Generator Form -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <div class="card-title">🔑 Generator Kunci Aktivasi Lisensi</div>
+                </div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Kode Outlet Toko (Klien)</label>
+                        <input type="text" class="input-control" id="genOutletCode" placeholder="Contoh: POS-88219">
+                    </div>
+                    <div class="input-group">
+                        <label>Pilih Tipe Lisensi</label>
+                        <select class="input-control" id="genLicenseType">
+                            <option value="PRO">PRO (Unlimited Transaksi)</option>
+                            <option value="ULTRA">ULTRA (Multi-Device + Cloud Sync)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateAndCopyKey()">⚡ Generate & Salin Kode Aktivasi</button>
+                    <button class="btn btn-secondary" onclick="openAddDeviceModal()">+ Registrasikan Device Baru</button>
+                </div>
+                <div id="generatedKeyResult" style="margin-top: 14px; padding: 12px; background: #FFFBEB; border: 1px dashed #FCD34D; border-radius: 10px; display: none; font-size: 13px; font-weight: 700; color: #92400E;"></div>
+            </div>
+
+            <!-- Registered Devices Table & Monitoring -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📱 Daftar Outlet & Device Terdaftar</div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="exportToCsv()">📥 Ekspor Excel (CSV)</button>
+                        <button class="btn btn-purple" onclick="exportToPdf()">📄 Ekspor PDF / Cetak Laporan</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Kode Outlet</th>
+                                <th>Nama Toko / Outlet</th>
+                                <th>Alamat Toko</th>
+                                <th>No. HP / WA</th>
+                                <th>Mulai Penggunaan</th>
+                                <th>Lisensi & Status</th>
+                                <th>Tanggal Aktivasi</th>
+                                <th>Total Transaksi</th>
+                                <th>Aksi Aktivasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deviceTableBody">
+                            <!-- Dynamically Rendered -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Laporan Tab -->
-        <div class="tab-page" id="tab-laporan">
-            <div class="card" style="background: linear-gradient(135deg, #1E2B4D, #0F172A); color: white;">
-                <span style="font-size: 12px; opacity: 0.8;">Total Omzet Toko</span>
-                <div style="font-size: 24px; font-weight: 800; color: #FF6600; margin-top: 4px;" id="reportTotalOmzet">Rp 0</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">
-                    <span>📊 Riwayat Transaksi</span>
-                    <button class="btn btn-outline" onclick="exportCsvReport()" style="padding: 4px 10px; font-size: 11px;">Ekspor CSV</button>
-                </div>
-                <div id="transactionHistoryList" style="display: flex; flex-direction: column; gap: 10px;"></div>
-            </div>
-        </div>
-
-        <!-- Pengaturan & Lisensi Tab -->
-        <div class="tab-page" id="tab-pengaturan">
-            <div class="card">
-                <div class="card-title">⚙️ Lisensi & Cloud Outlet</div>
-                <div class="input-group">
-                    <label>Kode Outlet Toko</label>
-                    <input type="text" class="input-control" id="outletCodeWeb" value="POS-IOS-8821" readonly>
-                </div>
-                <div class="input-group">
-                    <label>Kode Aktivasi Lisensi PRO</label>
-                    <input type="text" class="input-control" id="proKeyInputWeb" placeholder="PRO-POS-IOS-XXXXXX">
-                </div>
-                <button class="btn btn-primary" onclick="activateProWeb()">Aktivasi Lisensi PRO</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">👑 Developer Master Console</div>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Khusus Akun Developer: <b>yofidewo4@gmail.com</b></p>
-                <div class="input-group">
-                    <label>PIN Master Developer (911911)</label>
-                    <input type="password" class="input-control" id="devPinInputWeb" placeholder="••••••">
-                </div>
-                <button class="btn btn-secondary" onclick="openDevConsoleWeb()">Masuk Konsol Generator</button>
-            </div>
-        </div>
     </div>
 
-    <!-- Navigation Footer -->
-    <div class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('kasir', this)">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            Kasir
-        </button>
-        <button class="nav-item" onclick="switchTab('produk', this)">
-            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/></svg>
-            Produk
-        </button>
-        <button class="nav-item" onclick="switchTab('laporan', this)">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-            Laporan
-        </button>
-        <button class="nav-item" onclick="switchTab('pengaturan', this)">
-            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-            Pengaturan
-        </button>
-    </div>
-
-    <!-- Cart Checkout Modal -->
-    <div class="modal" id="cartModal">
+    <!-- Modal Registrasi / Tambah Device Baru -->
+    <div class="modal" id="deviceModal">
         <div class="modal-body">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="font-size: 16px; font-weight:700;">🛒 Keranjang Belanja</h3>
-                <button class="btn btn-outline" onclick="closeCartModal()" style="padding: 4px 8px;">✕</button>
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Registrasi Device / Outlet Baru</h3>
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label>Nama Toko / Outlet *</label>
+                <input type="text" class="input-control" id="modalStoreName" placeholder="Contoh: Toko Berkah Jaya">
             </div>
-            <div id="cartModalList" style="display:flex; flex-direction:column; gap:8px;"></div>
-            <div style="border-top: 1px solid var(--border); padding-top: 10px; display:flex; justify-content:space-between; font-weight:800; font-size:16px;">
-                <span>Total Belanja:</span>
-                <span id="cartModalTotal" style="color: var(--primary);">Rp 0</span>
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label>Alamat Toko *</label>
+                <input type="text" class="input-control" id="modalStoreAddress" placeholder="Contoh: Jl. Sudirman No. 45, Jakarta">
             </div>
-            <div class="input-group">
-                <label>Nominal Pembayaran (Rp)</label>
-                <input type="number" class="input-control" id="payAmountInput" placeholder="0">
+            <div class="input-group" style="margin-bottom: 12px;">
+                <label>No. HP / WhatsApp *</label>
+                <input type="text" class="input-control" id="modalStorePhone" placeholder="Contoh: 081234567890">
             </div>
-            <button class="btn btn-primary" onclick="processCheckoutWeb()">SELESAIKAN PEMBAYARAN ➔</button>
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label>Kode Outlet (Opsional)</label>
+                <input type="text" class="input-control" id="modalOutletCode" placeholder="Otomatis jika dikosongkan (Contoh: POS-88219)">
+            </div>
+            <div class="btn-group" style="justify-content: flex-end;">
+                <button class="btn btn-outline" onclick="closeDeviceModal()">Batal</button>
+                <button class="btn btn-primary" onclick="saveNewDevice()">Simpan Device</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Sample Products Initial Database
-        let dbProducts = JSON.parse(localStorage.getItem('warungku_products')) || [
-            { id: 1, name: "Indomie Goreng Original", code: "PRD-001", buyPrice: 2800, sellPrice: 3500, stock: 120 },
-            { id: 2, name: "Beras Maknyus 5kg", code: "PRD-002", buyPrice: 65000, sellPrice: 72000, stock: 25 },
-            { id: 3, name: "Minyak Goreng Bimoli 2L", code: "PRD-003", buyPrice: 33000, sellPrice: 36500, stock: 40 },
-            { id: 4, name: "Teh Pucuk Harum 350ml", code: "PRD-004", buyPrice: 3000, sellPrice: 4500, stock: 100 }
+        const initialDevices = [
+            {
+                outletCode: "POS-88219",
+                storeName: "Warung Berkah Utama",
+                storeAddress: "Jl. Merdeka No. 12, Jakarta",
+                storePhone: "081299887766",
+                startDate: "2026-01-10",
+                licenseType: "PRO",
+                activationDate: "2026-01-12",
+                txCount: 482
+            },
+            {
+                outletCode: "POS-91204",
+                storeName: "Minimarket Barokah",
+                storeAddress: "Jl. Raya Bogor KM 24",
+                storePhone: "081344556677",
+                startDate: "2026-02-01",
+                licenseType: "ULTRA",
+                activationDate: "2026-02-01",
+                txCount: 1240
+            },
+            {
+                outletCode: "POS-33102",
+                storeName: "Toko Sembako Bu Ani",
+                storeAddress: "Pasar Baru Blok A No. 5",
+                storePhone: "085677889900",
+                startDate: "2026-03-15",
+                licenseType: "FREE TRIAL",
+                activationDate: "-",
+                txCount: 18
+            }
         ];
 
-        let cart = [];
-        let dbTransactions = JSON.parse(localStorage.getItem('warungku_txs')) || [];
+        let devices = JSON.parse(localStorage.getItem('warungku_registered_devices')) || initialDevices;
 
-        function saveDb() {
-            localStorage.setItem('warungku_products', JSON.stringify(dbProducts));
-            localStorage.setItem('warungku_txs', JSON.stringify(dbTransactions));
+        function saveDevicesToStorage() {
+            localStorage.setItem('warungku_registered_devices', JSON.stringify(devices));
         }
 
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-page').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            el.classList.add('active');
-            if (tabId === 'produk') renderManageProducts();
-            if (tabId === 'laporan') renderReports();
-        }
-
-        function formatMoney(num) { return 'Rp ' + Math.round(num).toLocaleString('id-ID'); }
-
-        function renderProducts() {
-            const search = document.getElementById('searchProductInput').value.toLowerCase();
-            const grid = document.getElementById('productGridList');
-            grid.innerHTML = '';
-
-            dbProducts.filter(p => p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search)).forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.onclick = () => addToCart(p);
-                card.innerHTML = `
-                    <div class="product-name">${p.name}</div>
-                    <div class="product-price">${formatMoney(p.sellPrice)}</div>
-                    <div class="product-stock">Stok: ${p.stock} Pcs</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function addToCart(prod) {
-            const idx = cart.findIndex(item => item.product.id === prod.id);
-            if (idx >= 0) { cart[idx].qty++; }
-            else { cart.push({ product: prod, qty: 1 }); }
-            updateCartBar();
-        }
-
-        function updateCartBar() {
-            const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
-            const totalPrice = cart.reduce((sum, item) => sum + (item.qty * item.product.sellPrice), 0);
-            document.getElementById('cartCountLabel').innerText = totalCount + ' Item dalam Keranjang';
-            document.getElementById('cartTotalLabel').innerText = formatMoney(totalPrice);
-            document.getElementById('cartModalTotal').innerText = formatMoney(totalPrice);
-        }
-
-        function openCartModal() {
-            if (cart.length === 0) { alert('Keranjang masih kosong!'); return; }
-            const list = document.getElementById('cartModalList');
-            list.innerHTML = '';
-            cart.forEach((item, index) => {
-                const row = document.createElement('div');
-                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; padding:8px 12px; border-radius:8px;';
-                row.innerHTML = `
-                    <div><b>${item.product.name}</b><br><small>${item.qty} x ${formatMoney(item.product.sellPrice)}</small></div>
-                    <button class="btn btn-outline" style="padding:2px 8px; font-size:11px;" onclick="removeFromCart(${index})">✕</button>
-                `;
-                list.appendChild(row);
-            });
-            document.getElementById('cartModal').classList.add('active');
-        }
-
-        function removeFromCart(idx) {
-            cart.splice(idx, 1);
-            if (cart.length === 0) closeCartModal();
-            else openCartModal();
-            updateCartBar();
-        }
-
-        function closeCartModal() { document.getElementById('cartModal').classList.remove('active'); }
-
-        function processCheckoutWeb() {
-            const totalPrice = cart.reduce((sum, item) => sum + (item.qty * item.product.sellPrice), 0);
-            const payAmount = parseFloat(document.getElementById('payAmountInput').value) || totalPrice;
-            if (payAmount < totalPrice) { alert('Nominal pembayaran kurang!'); return; }
-
-            const invoiceNo = 'INV-' + Date.now().toString().slice(-6);
-            dbTransactions.push({ invoice: invoiceNo, total: totalPrice, date: new Date().toLocaleString() });
-            
-            // Reduce stock
-            cart.forEach(item => {
-                const p = dbProducts.find(x => x.id === item.product.id);
-                if (p) p.stock = Math.max(0, p.stock - item.qty);
-            });
-
-            saveDb();
-            alert('Pembayaran Sukses! ✅\nKembalian: ' + formatMoney(payAmount - totalPrice));
-            cart = [];
-            closeCartModal();
-            updateCartBar();
-            renderProducts();
-        }
-
-        function renderManageProducts() {
-            const container = document.getElementById('manageProductList');
-            container.innerHTML = '';
-            dbProducts.forEach(p => {
-                const div = document.createElement('div');
-                div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:8px 0;';
-                div.innerHTML = `
-                    <div><b>${p.name}</b> (${p.code})<br><small>Beli: ${formatMoney(p.buyPrice)} | Jual: ${formatMoney(p.sellPrice)} | Stok: ${p.stock}</small></div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function openAddProductModal() {
-            const name = prompt('Nama Produk Baru:');
-            const price = parseFloat(prompt('Harga Jual (Rp):'));
-            if (name && price) {
-                dbProducts.push({ id: Date.now(), name: name, code: 'PRD-' + Date.now().toString().slice(-3), buyPrice: price * 0.8, sellPrice: price, stock: 50 });
-                saveDb();
-                renderManageProducts();
-                renderProducts();
-            }
-        }
-
-        function renderReports() {
-            const total = dbTransactions.reduce((sum, tx) => sum + tx.total, 0);
-            document.getElementById('reportTotalOmzet').innerText = formatMoney(total);
-            const container = document.getElementById('transactionHistoryList');
-            container.innerHTML = '';
-            dbTransactions.slice().reverse().forEach(tx => {
-                const div = document.createElement('div');
-                div.style.cssText = 'display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #E2E8F0; font-size:13px;';
-                div.innerHTML = `<div><b>${tx.invoice}</b><br><small>${tx.date}</small></div><div style="font-weight:800; color:var(--primary);">${formatMoney(tx.total)}</div>`;
-                container.appendChild(div);
-            });
-        }
-
-        function exportCsvReport() {
-            let csv = "No Faktur,Tanggal,Total Omset\n";
-            dbTransactions.forEach(tx => { csv += `"${tx.invoice}","${tx.date}",${tx.total}\n`; });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'Laporan_Penjualan_Web.csv'; a.click();
-        }
-
-        function activateProWeb() {
-            const key = document.getElementById('proKeyInputWeb').value.trim();
-            if (key.startsWith('PRO-')) {
-                alert('Aplikasi Web Berhasil Diaktivasi PRO 100% Permanen! ✅');
+        function verifyDeveloperPin() {
+            const pin = document.getElementById('masterPinInput').value.trim();
+            if (pin === '911911' || pin === '889977' || pin === '1234') {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'flex';
+                renderDashboard();
             } else {
-                alert('Kode Lisensi Tidak Valid!');
+                alert('❌ PIN Master Developer salah! Gunakan PIN default 911911.');
             }
         }
 
@@ -375,27 +291,136 @@
             return Math.abs(hash);
         }
 
-        function openDevConsoleWeb() {
-            const pin = document.getElementById('devPinInputWeb').value.trim();
-            if (pin === '911911' || pin === '889977') {
-                const rawOutlet = document.getElementById('outletCodeWeb').value.trim();
-                const outletPrompt = prompt('Masukkan Kode Outlet Klien yang ingin diaktivasi (Contoh: POS-89214):', rawOutlet) || rawOutlet;
-                const clean = outletPrompt.toUpperCase().replace('POS-', '').trim();
-                const hashVal = (getHashCode(clean) * 31 + 77).toString().slice(-6);
-                const genKey = 'PRO-' + clean + '-' + hashVal;
-                const simpleKey = 'PRO-' + outletPrompt.toUpperCase();
+        function generateKey(outletCode, type) {
+            const clean = outletCode.trim().toUpperCase().replace('POS-', '');
+            const prefix = type.toUpperCase() === 'ULTRA' ? 'ULTRA' : 'PRO';
+            if (!clean) return prefix + '-WARUNGKU-FULL';
+            const hashVal = (getHashCode(clean) * 31 + 77).toString().slice(-6);
+            return prefix + '-' + clean + '-' + hashVal;
+        }
 
-                alert('🔐 AKUN DEVELOPER yofidewo4@gmail.com TERVERIFIKASI!\n\n' +
-                      'Kode Outlet Klien: ' + outletPrompt + '\n\n' +
-                      '👉 Kode Lisensi Utama: ' + genKey + '\n' +
-                      '👉 Kode Lisensi Alternatif: ' + simpleKey + '\n\n' +
-                      'Salin salah satu kode di atas ke aplikasi APK Customer untuk aktivasi PRO!');
-            } else {
-                alert('❌ PIN Master Developer Salah! Khusus akun yofidewo4@gmail.com');
+        function generateAndCopyKey() {
+            const code = document.getElementById('genOutletCode').value.trim();
+            const type = document.getElementById('genLicenseType').value;
+            if (!code) {
+                alert('Masukkan Kode Outlet Klien terlebih dahulu!');
+                return;
+            }
+
+            const key = generateKey(code, type);
+            const resDiv = document.getElementById('generatedKeyResult');
+            resDiv.style.display = 'block';
+            resDiv.innerHTML = `🎉 Kode Aktivasi Lisensi ${type}: <b>${key}</b><br><small>Salin kode ini dan berikan kepada pemilik outlet untuk diaktivasi di APK Android.</small>`;
+
+            navigator.clipboard.writeText(key).then(() => {
+                alert(`✅ Kode Aktivasi ${type} Berhasil Dibuat & Disalin ke Clipboard:\n\n${key}`);
+            });
+        }
+
+        function renderDashboard() {
+            document.getElementById('statTotalDevices').innerText = devices.length;
+            document.getElementById('statProDevices').innerText = devices.filter(d => d.licenseType === 'PRO').length;
+            document.getElementById('statUltraDevices').innerText = devices.filter(d => d.licenseType === 'ULTRA').length;
+            const totalTx = devices.reduce((sum, d) => sum + (parseInt(d.txCount) || 0), 0);
+            document.getElementById('statTotalTransactions').innerText = totalTx.toLocaleString('id-ID');
+
+            const tbody = document.getElementById('deviceTableBody');
+            tbody.innerHTML = '';
+
+            devices.forEach((d, idx) => {
+                const tr = document.createElement('tr');
+                const badgeClass = d.licenseType === 'PRO' ? 'badge-pro' : (d.licenseType === 'ULTRA' ? 'badge-ultra' : 'badge-trial');
+                
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td><b>${d.outletCode}</b></td>
+                    <td><b>${d.storeName}</b></td>
+                    <td>${d.storeAddress}</td>
+                    <td><a href="https://wa.me/${d.storePhone.replace(/[^0-9]/g, '')}" target="_blank" style="color: #10B981; font-weight:700; text-decoration:none;">💬 ${d.storePhone}</a></td>
+                    <td>${d.startDate}</td>
+                    <td><span class="badge ${badgeClass}">${d.licenseType}</span></td>
+                    <td>${d.activationDate}</td>
+                    <td><b>${(d.txCount || 0).toLocaleString('id-ID')} Tx</b></td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="activateDevice('${d.outletCode}', 'PRO')">Set PRO</button>
+                            <button class="btn btn-purple" style="padding: 4px 8px; font-size: 11px;" onclick="activateDevice('${d.outletCode}', 'ULTRA')">Set ULTRA</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function activateDevice(code, type) {
+            const dev = devices.find(d => d.outletCode === code);
+            if (dev) {
+                dev.licenseType = type;
+                dev.activationDate = new Date().toISOString().split('T')[0];
+                saveDevicesToStorage();
+                renderDashboard();
+                const key = generateKey(code, type);
+                alert(`✅ Outlet ${dev.storeName} (${code}) berhasil diaktivasi ke ${type}!\n\nKode Aktivasi: ${key}`);
             }
         }
 
-        renderProducts();
+        function openAddDeviceModal() {
+            document.getElementById('deviceModal').classList.add('active');
+        }
+
+        function closeDeviceModal() {
+            document.getElementById('deviceModal').classList.remove('active');
+        }
+
+        function saveNewDevice() {
+            const name = document.getElementById('modalStoreName').value.trim();
+            const address = document.getElementById('modalStoreAddress').value.trim();
+            const phone = document.getElementById('modalStorePhone').value.trim();
+            let code = document.getElementById('modalOutletCode').value.trim().toUpperCase();
+
+            if (!name || !address || !phone) {
+                alert('Nama Toko, Alamat, dan No. HP/WA WAJIB diisi!');
+                return;
+            }
+
+            if (!code) {
+                code = 'POS-' + Math.floor(10000 + Math.random() * 90000);
+            }
+
+            devices.push({
+                outletCode: code,
+                storeName: name,
+                storeAddress: address,
+                storePhone: phone,
+                startDate: new Date().toISOString().split('T')[0],
+                licenseType: "FREE TRIAL",
+                activationDate: "-",
+                txCount: 0
+            });
+
+            saveDevicesToStorage();
+            closeDeviceModal();
+            renderDashboard();
+            alert(`✅ Device / Outlet ${name} berhasil terdaftar dengan Kode: ${code}`);
+        }
+
+        function exportToCsv() {
+            let csv = "No,Kode Outlet,Nama Toko,Alamat Toko,No HP WA,Mulai Penggunaan,Status Lisensi,Tanggal Aktivasi,Total Transaksi\n";
+            devices.forEach((d, i) => {
+                csv += `"${i+1}","${d.outletCode}","${d.storeName}","${d.storeAddress}","${d.storePhone}","${d.startDate}","${d.licenseType}","${d.activationDate}","${d.txCount}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `WarungKu_Daftar_Device_Outlet_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        function exportToPdf() {
+            window.print();
+        }
     </script>
 </body>
 </html>

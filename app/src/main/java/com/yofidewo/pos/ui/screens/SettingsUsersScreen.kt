@@ -1050,6 +1050,10 @@ fun OutletSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                         } else {
                             Button(
                                 onClick = {
+                                    if (name.isBlank() || address.isBlank() || phone.isBlank()) {
+                                        Toast.makeText(context, "Nama toko, Alamat, dan No. HP/WA WAJIB diisi!", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
                                     viewModel.createCloudOutlet(name, address, phone) { success, code ->
                                         if (success) {
                                             Toast.makeText(context, "Berhasil membuat Kode Outlet: $code", Toast.LENGTH_LONG).show()

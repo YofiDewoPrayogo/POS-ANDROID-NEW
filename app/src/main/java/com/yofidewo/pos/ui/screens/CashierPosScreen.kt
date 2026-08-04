@@ -72,6 +72,9 @@ fun CashierPosScreen(viewModel: PosViewModel) {
     val isTrialExpiredState by viewModel.isTrialExpired.collectAsState()
     val isProUnlocked by viewModel.isProUnlocked.collectAsState()
     val outletCode by viewModel.outletCode.collectAsState()
+    val storeLicense by viewModel.storeLicense.collectAsState()
+    
+    val licenseTier = storeLicense.split("-").firstOrNull()?.uppercase() ?: "PRO"
 
     val isTrialExpired = !isProUnlocked && (isTrialExpiredState || trialTxLeft <= 0)
 
@@ -122,7 +125,7 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                         .fillMaxHeight()
                         .padding(16.dp)
                 ) {
-                    if (!isActivated) {
+                    if (!isProUnlocked) {
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                             colors = CardDefaults.cardColors(
@@ -157,6 +160,33 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                                     ) {
                                         Text("Aktivasi", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                                     }
+                                }
+                            }
+                        }
+                    } else {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.filled.Info,
+                                        contentDescription = null,
+                                        tint = Color(0xFF2E7D32),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Aplikasi Aktif (Lisensi: $licenseTier)",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF2E7D32)
+                                    )
                                 }
                             }
                         }
@@ -232,7 +262,7 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                         .padding(padding)
                         .padding(16.dp)
                 ) {
-                    if (!isActivated) {
+                    if (!isProUnlocked) {
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                             colors = CardDefaults.cardColors(
@@ -267,6 +297,33 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                                     ) {
                                         Text("Aktivasi", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                                     }
+                                }
+                            }
+                        }
+                    } else {
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.filled.Info,
+                                        contentDescription = null,
+                                        tint = Color(0xFF2E7D32),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Aktif (Lisensi: $licenseTier)",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF2E7D32)
+                                    )
                                 }
                             }
                         }
