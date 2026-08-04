@@ -119,11 +119,19 @@ $env:GRADLE_USER_HOME = "D:\GradleHome"; $env:ANDROID_HOME = "C:\Users\ommul\And
 
 ---
 
-## 🌐 Cara Hosting Gratis Selamanya (Web PWA iOS & Android)
+## 🌐 Cara Hosting Gratis Selamanya via GitHub Pages (Web PWA iOS & Android)
 
-1. Buka situs [Netlify Drop](https://app.netlify.com/drop).
-2. Drag & Drop folder yang berisi file `index.html` dan `warungku_pos_web.html`.
-3. Aplikasi Web POS Anda akan langsung aktif dengan URL HTTPS gratis selamanya (Contoh: `https://warungku-pos.netlify.app`).
+Karena kode aplikasi Web POS (`index.html` dan `warungku_pos_web.html`) sudah di-push ke GitHub, Anda dapat mengaktifkan hosting **GitHub Pages** langsung dari repositori Anda secara gratis selamanya:
+
+1. Buka halaman utama repositori GitHub Anda: [https://github.com/YofiDewoPrayogo/POS-ANDROID-NEW](https://github.com/YofiDewoPrayogo/POS-ANDROID-NEW)
+2. Klik tab **Settings** (Pengaturan) di bagian atas repositori.
+3. Di menu sebelah kiri, cari bagian *Code and automation*, lalu pilih **Pages**.
+4. Pada bagian **Build and deployment**:
+   - Source: Biarkan terpilih **Deploy from a branch**.
+   - Branch: Pilih **`main`** dan pilih folder **`/(root)`**, kemudian klik **Save**.
+5. Tunggu beberapa menit (sekitar 1-3 menit) untuk proses deployment otomatis dari GitHub.
+6. Refresh halaman *Pages* tersebut. Anda akan melihat tulisan _"Your site is live at..."_ berserta link URL hosting gratis Anda (Contoh URL: `https://yofidewoprayogo.github.io/POS-ANDROID-NEW/`).
+7. Buka link URL tersebut di peramban Safari (iOS) atau Chrome (Android) pada perangkat Anda, lalu klik **"Add to Home Screen"** untuk menginstal Web PWA ini layaknya aplikasi native tanpa App Store.
 
 ---
 
