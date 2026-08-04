@@ -176,7 +176,7 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Icon(
-                                        imageVector = androidx.compose.material.icons.filled.Info,
+                                        imageVector = Icons.Default.Info,
                                         contentDescription = null,
                                         tint = Color(0xFF2E7D32),
                                         modifier = Modifier.size(20.dp)
@@ -313,7 +313,7 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Icon(
-                                        imageVector = androidx.compose.material.icons.filled.Info,
+                                        imageVector = Icons.Default.Info,
                                         contentDescription = null,
                                         tint = Color(0xFF2E7D32),
                                         modifier = Modifier.size(20.dp)
