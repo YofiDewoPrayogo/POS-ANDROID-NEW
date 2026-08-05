@@ -282,6 +282,12 @@ class PosRepository(private val db: PosDatabase, context: Context) {
     suspend fun updateDiscount(discount: DiscountEntity) = db.discountDao().updateDiscount(discount)
     suspend fun deleteDiscount(discount: DiscountEntity) = db.discountDao().deleteDiscount(discount)
 
+    // Restaurant Tables (Floor Plan Layout Maintenance)
+    val restaurantTables: Flow<List<RestaurantTableEntity>> = db.restaurantTableDao().getAllTables()
+    suspend fun saveTable(table: RestaurantTableEntity): Long = db.restaurantTableDao().insertTable(table)
+    suspend fun updateTable(table: RestaurantTableEntity) = db.restaurantTableDao().updateTable(table)
+    suspend fun deleteTable(table: RestaurantTableEntity) = db.restaurantTableDao().deleteTable(table)
+
     // Database Reset Operations
     suspend fun deleteAllProducts() = db.productDao().deleteAllProducts()
     suspend fun resetAllProductStocks() = db.productDao().resetAllProductStocks()

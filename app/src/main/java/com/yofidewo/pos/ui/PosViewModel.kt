@@ -46,6 +46,7 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val pettyCashEntries = repository.pettyCashEntries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val stockAdjustments = repository.stockAdjustments.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val stockMutations = repository.stockMutations.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val restaurantTables = repository.restaurantTables.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val discounts = repository.activeDiscounts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -815,7 +816,9 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
         stock: Int,
         minStock: Int,
         desc: String,
-        imageUrl: String? = null
+        imageUrl: String? = null,
+        printerTarget: String = "KITCHEN",
+        modifierOptions: String = ""
     ) {
         viewModelScope.launch {
             val product = ProductEntity(
@@ -831,7 +834,9 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                 stock = stock,
                 minStock = minStock,
                 description = desc,
-                imageUrl = imageUrl ?: ""
+                imageUrl = imageUrl ?: "",
+                printerTarget = printerTarget,
+                modifierOptions = modifierOptions
             )
             if (id == 0L) {
                 repository.insertProduct(product)
@@ -843,6 +848,26 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
 
     fun deleteProduct(product: ProductEntity) {
         viewModelScope.launch { repository.deleteProduct(product) }
+    }
+
+    // Restaurant Table CRUD
+    fun saveTable(id: Long = 0, number: String, floor: String = "FIRST FLOOR", capacity: Int = 4, shape: String = "RECTANGLE", status: String = "AVAILABLE") {
+        viewModelScope.launch {
+            repository.saveTable(
+                com.yofidewo.pos.data.RestaurantTableEntity(
+                    id = id,
+                    tableNumber = number,
+                    floorName = floor,
+                    capacity = capacity,
+                    shape = shape,
+                    status = status
+                )
+            )
+        }
+    }
+
+    fun deleteTable(table: com.yofidewo.pos.data.RestaurantTableEntity) {
+        viewModelScope.launch { repository.deleteTable(table) }
     }
 
     // Receiving Notes

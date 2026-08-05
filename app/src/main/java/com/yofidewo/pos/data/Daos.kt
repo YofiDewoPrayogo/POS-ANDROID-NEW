@@ -307,3 +307,18 @@ interface DiscountDao {
     @Delete
     suspend fun deleteDiscount(discount: DiscountEntity)
 }
+
+@Dao
+interface RestaurantTableDao {
+    @Query("SELECT * FROM restaurant_tables ORDER BY tableNumber ASC")
+    fun getAllTables(): Flow<List<RestaurantTableEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTable(table: RestaurantTableEntity): Long
+
+    @Update
+    suspend fun updateTable(table: RestaurantTableEntity)
+
+    @Delete
+    suspend fun deleteTable(table: RestaurantTableEntity)
+}

@@ -14,6 +14,7 @@ sealed class Screen(val route: String, val title: String) {
     object SettingsUsers : Screen("settings_users", "Pengaturan")
     object OutletSetup : Screen("outlet_setup", "Setup Outlet")
     object SuperAdmin : Screen("super_admin", "Super Admin")
+    object TableLayout : Screen("table_layout", "Denah Meja F&B")
 }
 
 

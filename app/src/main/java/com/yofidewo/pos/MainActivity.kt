@@ -280,6 +280,9 @@ fun MainAppLayout(viewModel: PosViewModel) {
                 composable(Screen.SuperAdmin.route) {
                     com.yofidewo.pos.ui.screens.SuperAdminScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
                 }
+                composable(Screen.TableLayout.route) {
+                    TableLayoutScreen(viewModel = viewModel)
+                }
             }
         }
 

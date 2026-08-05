@@ -302,3 +302,14 @@ data class DiscountEntity(
     val value: Double,
     val isActive: Boolean = true
 )
+
+@Entity(tableName = "restaurant_tables")
+data class RestaurantTableEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val tableNumber: String,
+    val floorName: String = "FIRST FLOOR",
+    val capacity: Int = 4,
+    val shape: String = "RECTANGLE",
+    val status: String = "AVAILABLE",
+    val activeInvoiceNumber: String = ""
+)

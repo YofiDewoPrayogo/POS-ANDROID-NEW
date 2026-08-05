@@ -409,6 +409,8 @@ fun ProductFormDialog(
     var minStockStr by remember { mutableStateOf(productToEdit?.minStock?.toString() ?: "5") }
     var description by remember { mutableStateOf(productToEdit?.description ?: "") }
     var imageUrlStr by remember { mutableStateOf(productToEdit?.imageUrl ?: "") }
+    var printerTarget by remember { mutableStateOf(productToEdit?.printerTarget ?: "KITCHEN") }
+    var modifierOptions by remember { mutableStateOf(productToEdit?.modifierOptions ?: "") }
     
     var selectedCatId by remember { mutableStateOf(productToEdit?.categoryId ?: categories.firstOrNull()?.id) }
     var selectedBrandId by remember { mutableStateOf(productToEdit?.brandId ?: brands.firstOrNull()?.id) }
@@ -607,6 +609,32 @@ fun ProductFormDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
+                    Text("Konfigurasi Printer Output & Modifier (F&B)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Target Printer Output:", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                        listOf("KITCHEN", "BAR", "KASIR", "LABEL_CUP").forEach { target ->
+                            FilterChip(
+                                selected = printerTarget == target,
+                                onClick = { printerTarget = target },
+                                label = { Text(target, fontSize = 10.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = modifierOptions,
+                        onValueChange = { modifierOptions = it },
+                        label = { Text("Pilihan Modifier / Varian (e.g. Extra Shot, Less Sugar, No Mayo)") },
+                        placeholder = { Text("Extra Shot, Less Sugar, Less Ice") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 
@@ -635,7 +663,9 @@ fun ProductFormDialog(
                                             stock = stockStr.toIntOrNull() ?: 0,
                                             minStock = minStockStr.toIntOrNull() ?: 5,
                                             desc = description,
-                                            imageUrl = imageUrlStr
+                                            imageUrl = imageUrlStr,
+                                            printerTarget = printerTarget,
+                                            modifierOptions = modifierOptions
                                         )
                                         Toast.makeText(context, "Data produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
                                         onDismiss()

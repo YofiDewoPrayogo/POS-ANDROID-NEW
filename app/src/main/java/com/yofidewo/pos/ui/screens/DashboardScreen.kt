@@ -227,6 +227,7 @@ fun DashboardScreen(
                 }
                 item { QuickActionItem("Mulai Kasir POS", "Buka layar kasir transaksi cepat", icon = Icons.Default.ShoppingCart, onClick = { onNavigate(Screen.CashierPos.route) }) }
                 item { QuickActionItem("Kelola Produk & Stok", "Tambah / edit daftar barang", icon = Icons.Default.Inventory2, onClick = { onNavigate(Screen.Products.route) }) }
+                item { QuickActionItem("Layout Denah Meja F&B", "Atur denah meja, lokasi lantai & kapasitas", icon = Icons.Default.EventSeat, onClick = { onNavigate(Screen.TableLayout.route) }) }
                 item { QuickActionItem("Pembelian & Stok Opname (RN)", "Catat barang masuk dari distributor", icon = Icons.Default.LocalShipping, onClick = { onNavigate(Screen.ReceivingNotes.route) }) }
                 item { QuickActionItem("Backup & Ekspor Data (Excel/CSV)", "Ekspor laporan & file cadangan", icon = Icons.Default.CloudDownload, onClick = { showBackupDialog = true }) }
             }

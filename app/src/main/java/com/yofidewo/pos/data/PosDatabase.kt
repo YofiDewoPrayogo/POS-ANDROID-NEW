@@ -29,9 +29,10 @@ import kotlinx.coroutines.launch
         StockAdjustmentEntity::class,
         StockMutationEntity::class,
         CustomerEntity::class,
-        DiscountEntity::class
+        DiscountEntity::class,
+        RestaurantTableEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class PosDatabase : RoomDatabase() {
@@ -53,6 +54,7 @@ abstract class PosDatabase : RoomDatabase() {
     abstract fun pettyCashDao(): PettyCashDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
     abstract fun stockMutationDao(): StockMutationDao
+    abstract fun restaurantTableDao(): RestaurantTableDao
 
     companion object {
         @Volatile
