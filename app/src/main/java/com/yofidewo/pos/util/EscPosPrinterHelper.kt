@@ -27,8 +27,22 @@ object EscPosPrinterHelper {
     private val ESC_BOLD_OFF = byteArrayOf(0x1B, 0x45, 0x00)
     private val ESC_DOUBLE_HEIGHT_ON = byteArrayOf(0x1B, 0x21, 0x10)
     private val ESC_DOUBLE_HEIGHT_OFF = byteArrayOf(0x1B, 0x21, 0x00)
-    private val ESC_FEED_AND_CUT = byteArrayOf(0x1D, 0x56, 0x42, 0x00)
     private val ESC_KICK_DRAWER = byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte())
+
+    // Multi-brand ESC/POS Auto-Cutter Commands (GS V 66 0 + GS V 0 + ESC i + ESC m)
+    private val ESC_FEED_PAPER = "\n\n\n\n\n".toByteArray()
+    private val CUT_GS_V_66 = byteArrayOf(0x1D, 0x56, 0x42, 0x00) // GS V 66 0
+    private val CUT_GS_V_0  = byteArrayOf(0x1D, 0x56, 0x00)       // GS V 0
+    private val CUT_ESC_i   = byteArrayOf(0x1B, 0x69)             // ESC i
+    private val CUT_ESC_m   = byteArrayOf(0x1B, 0x6D)             // ESC m
+
+    private fun writeAutoCutter(outputStream: OutputStream) {
+        outputStream.write(ESC_FEED_PAPER)
+        outputStream.write(CUT_GS_V_66)
+        outputStream.write(CUT_GS_V_0)
+        outputStream.write(CUT_ESC_i)
+        outputStream.write(CUT_ESC_m)
+    }
 
     data class BluetoothDeviceInfo(val name: String, val address: String)
 
@@ -251,12 +265,14 @@ object EscPosPrinterHelper {
             writeBytes(ESC_ALIGN_CENTER)
             writeText("Terima Kasih atas Kunjungan Anda!\n")
             writeText("Barang yang sudah dibeli\n")
-            writeText("tidak dapat ditukar/dikembalikan.\n\n\n")
+            writeText("tidak dapat ditukar/dikembalikan.\n")
 
-            // 8. Feed & Cut
-            writeBytes(ESC_FEED_AND_CUT)
+            // 8. Auto-Cutter (Feed paper & cut)
+            writeAutoCutter(outputStream)
 
             outputStream.flush()
+            // Pause 800ms for Bluetooth hardware buffer to finish transmitting all bytes & cutter commands
+            try { Thread.sleep(800) } catch (_: Exception) {}
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -339,10 +355,11 @@ object EscPosPrinterHelper {
             writeJustified("Kembali:", formatMoney(transaction.changeAmount))
             writeText(lineSeparator)
             writeBytes(ESC_ALIGN_CENTER)
-            writeText("Terima Kasih atas Kunjungan Anda!\n\n\n")
-            writeBytes(ESC_FEED_AND_CUT)
+            writeText("Terima Kasih atas Kunjungan Anda!\n")
+            writeAutoCutter(outputStream)
 
             outputStream.flush()
+            try { Thread.sleep(800) } catch (_: Exception) {}
             outputStream.close()
             socket.close()
             Result.success(true)
@@ -400,13 +417,14 @@ object EscPosPrinterHelper {
             out.write("================================\n".toByteArray())
             out.write(ESC_ALIGN_LEFT)
             out.write("Waktu : ${df.format(Date())}\n".toByteArray())
-            out.write("Status: Printer Siap Pakai\n".toByteArray())
+            out.write("Status: Printer Siap Pakai (80mm Auto-Cutter)\n".toByteArray())
             out.write("Koneksi: Bluetooth\n".toByteArray())
             out.write("--------------------------------\n".toByteArray())
             out.write(ESC_ALIGN_CENTER)
-            out.write("WarungKu POS - Siap Cetak Struk\n\n\n".toByteArray())
-            out.write(ESC_FEED_AND_CUT)
+            out.write("WarungKu POS - Siap Cetak Struk\n".toByteArray())
+            writeAutoCutter(out)
             out.flush()
+            try { Thread.sleep(800) } catch (_: Exception) {}
             out.close()
             Result.success(true)
         } catch (e: Exception) {
@@ -442,8 +460,8 @@ object EscPosPrinterHelper {
             out.write("Koneksi: LAN/Network ($ip:$port)\n".toByteArray())
             out.write("--------------------------------\n".toByteArray())
             out.write(ESC_ALIGN_CENTER)
-            out.write("WarungKu POS - Siap Cetak Struk\n\n\n".toByteArray())
-            out.write(ESC_FEED_AND_CUT)
+            out.write("WarungKu POS - Siap Cetak Struk\n".toByteArray())
+            writeAutoCutter(out)
             out.flush()
             out.close()
             socket.close()

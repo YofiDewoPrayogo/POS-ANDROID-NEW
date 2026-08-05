@@ -44,16 +44,16 @@ fun InvoiceDialog(
     val selectedPrinterName by viewModel.selectedPrinterName.collectAsState()
     val paperWidth by viewModel.paperWidth.collectAsState()
     var isPrinting by remember { mutableStateOf(false) }
-    var autoPrinted by remember { mutableStateOf(false) }
+    var lastPrintedTxId by remember(transaction.id) { mutableLongStateOf(-1L) }
 
     LaunchedEffect(transaction.id) {
         items = viewModel.repository.getItemsForTransactionSync(transaction.id)
     }
 
-    // Auto print when items loaded if printer is configured
-    LaunchedEffect(items, selectedPrinterAddress) {
-        if (!autoPrinted && items.isNotEmpty() && selectedPrinterAddress.isNotBlank()) {
-            autoPrinted = true
+    // Auto print ONCE when items loaded if printer is configured
+    LaunchedEffect(items, transaction.id) {
+        if (items.isNotEmpty() && selectedPrinterAddress.isNotBlank() && lastPrintedTxId != transaction.id) {
+            lastPrintedTxId = transaction.id
             isPrinting = true
             viewModel.printReceiptBluetooth(
                 context = context,
@@ -61,7 +61,7 @@ fun InvoiceDialog(
                 items = items,
                 onSuccess = {
                     isPrinting = false
-                    Toast.makeText(context, "Struk berhasil dicetak!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Struk terkirim ke printer!", Toast.LENGTH_SHORT).show()
                 },
                 onError = { err ->
                     isPrinting = false
