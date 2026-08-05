@@ -181,6 +181,25 @@ class PosRepository(private val db: PosDatabase, context: Context) {
         db.cashierShiftDao().updateShift(shift)
     }
 
+    // Hold Orders
+    val holdOrders: Flow<List<HoldOrderEntity>> = db.holdOrderDao().getAllHoldOrders()
+    suspend fun saveHoldOrder(order: HoldOrderEntity): Long = db.holdOrderDao().insertHoldOrder(order)
+    suspend fun deleteHoldOrder(order: HoldOrderEntity) = db.holdOrderDao().deleteHoldOrder(order)
+
+    // Petty Cash (Kas Out)
+    val pettyCashEntries: Flow<List<PettyCashEntity>> = db.pettyCashDao().getAllPettyCash()
+    suspend fun addPettyCash(entry: PettyCashEntity): Long = db.pettyCashDao().insertPettyCash(entry)
+
+    // Stock Adjustments (Stok Opname)
+    val stockAdjustments: Flow<List<StockAdjustmentEntity>> = db.stockAdjustmentDao().getAllStockAdjustments()
+    suspend fun addStockAdjustment(adj: StockAdjustmentEntity): Long {
+        val prod = db.productDao().getProductById(adj.productId)
+        if (prod != null) {
+            db.productDao().updateProduct(prod.copy(stock = adj.physicalStock))
+        }
+        return db.stockAdjustmentDao().insertStockAdjustment(adj)
+    }
+
     // Customers
     val customers: Flow<List<CustomerEntity>> = db.customerDao().getAllCustomers()
     suspend fun insertCustomer(customer: CustomerEntity) = db.customerDao().insertCustomer(customer)

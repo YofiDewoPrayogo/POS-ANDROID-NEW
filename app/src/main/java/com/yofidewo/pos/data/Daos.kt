@@ -240,6 +240,36 @@ interface CashierShiftDao {
 }
 
 @Dao
+interface HoldOrderDao {
+    @Query("SELECT * FROM hold_orders ORDER BY timestamp DESC")
+    fun getAllHoldOrders(): Flow<List<HoldOrderEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHoldOrder(order: HoldOrderEntity): Long
+
+    @Delete
+    suspend fun deleteHoldOrder(order: HoldOrderEntity)
+}
+
+@Dao
+interface PettyCashDao {
+    @Query("SELECT * FROM petty_cash ORDER BY timestamp DESC")
+    fun getAllPettyCash(): Flow<List<PettyCashEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPettyCash(entry: PettyCashEntity): Long
+}
+
+@Dao
+interface StockAdjustmentDao {
+    @Query("SELECT * FROM stock_adjustments ORDER BY timestamp DESC")
+    fun getAllStockAdjustments(): Flow<List<StockAdjustmentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStockAdjustment(adj: StockAdjustmentEntity): Long
+}
+
+@Dao
 interface CustomerDao {
     @Query("SELECT * FROM customers ORDER BY name ASC")
     fun getAllCustomers(): kotlinx.coroutines.flow.Flow<List<CustomerEntity>>

@@ -104,7 +104,49 @@ data class ProductEntity(
     val description: String = "",
     val imageUrl: String = "",
     val printerTarget: String = "KASIR", // "KASIR", "KITCHEN", "BAR"
-    val modifierOptions: String = "" // "Less Sugar, Normal Sugar, Less Ice"
+    val modifierOptions: String = "", // "Less Sugar, Normal Sugar, Less Ice"
+    val wholesaleMinQty: Int = 0,
+    val wholesalePrice: Double = 0.0,
+    val unitName: String = "Pcs",
+    val expiryDate: Long? = null,
+    val isCombo: Boolean = false,
+    val comboItemsJson: String = ""
+)
+
+@Entity(tableName = "hold_orders")
+data class HoldOrderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val holdNumber: String,
+    val customerName: String = "Pelanggan",
+    val tableName: String = "Meja -",
+    val itemsJson: String,
+    val totalAmount: Double,
+    val cashierName: String,
+    val notes: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "petty_cash")
+data class PettyCashEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val cashierName: String,
+    val category: String, // e.g. "Beli Es Batu", "Air Galon", "Plastik/Kresek"
+    val amount: Double,
+    val notes: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "stock_adjustments")
+data class StockAdjustmentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val productId: Long,
+    val productName: String,
+    val systemStock: Int,
+    val physicalStock: Int,
+    val difference: Int,
+    val totalLossAmount: Double = 0.0,
+    val reason: String = "Rusak / Expired",
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "currencies")

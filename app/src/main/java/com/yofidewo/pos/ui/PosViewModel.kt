@@ -42,6 +42,10 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val shifts = repository.shifts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val activeShift = MutableStateFlow<CashierShiftEntity?>(null)
 
+    val holdOrders = repository.holdOrders.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val pettyCashEntries = repository.pettyCashEntries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val stockAdjustments = repository.stockAdjustments.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val discounts = repository.activeDiscounts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Custom Logo State
@@ -1042,6 +1046,126 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
             repository.closeShift(closed)
             activeShift.value = null
             onDone(closed)
+        }
+    }
+
+    // Hold Orders (Simpan Draft Pesanan / Open Tab)
+    fun saveCurrentCartToHoldOrder(customerName: String, tableName: String, notes: String = "") {
+        val currentCart = cartItems.value
+        if (currentCart.isEmpty()) return
+        viewModelScope.launch {
+            val holdNo = "HOLD-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.getDefault()).format(Date())
+            val itemsJsonStr = currentCart.joinToString(";") { "${it.product.id},${it.product.name},${it.quantity},${it.product.sellPrice}" }
+            val total = currentCart.sumOf { it.product.sellPrice * it.quantity }
+            val hold = HoldOrderEntity(
+                holdNumber = holdNo,
+                customerName = if (customerName.isBlank()) "Pelanggan" else customerName,
+                tableName = if (tableName.isBlank()) "Meja -" else tableName,
+                itemsJson = itemsJsonStr,
+                totalAmount = total,
+                cashierName = currentUser.value?.name ?: "Kasir",
+                notes = notes
+            )
+            repository.saveHoldOrder(hold)
+            clearCart()
+        }
+    }
+
+    fun restoreHoldOrderToCart(order: HoldOrderEntity) {
+        viewModelScope.launch {
+            val itemsList = mutableListOf<CartItem>()
+            val parts = order.itemsJson.split(";")
+            for (p in parts) {
+                val tokens = p.split(",")
+                if (tokens.size >= 4) {
+                    val prodId = tokens[0].toLongOrNull() ?: continue
+                    val qty = tokens[2].toIntOrNull() ?: 1
+                    val prod = products.value.find { it.id == prodId }
+                    if (prod != null) {
+                        itemsList.add(CartItem(prod, qty))
+                    }
+                }
+            }
+            cartItems.value = itemsList
+            repository.deleteHoldOrder(order)
+        }
+    }
+
+    // Petty Cash (Kas Out Operasional Kasir)
+    fun addPettyCash(category: String, amount: Double, notes: String = "") {
+        viewModelScope.launch {
+            val entry = PettyCashEntity(
+                cashierName = currentUser.value?.name ?: "Kasir",
+                category = category,
+                amount = amount,
+                notes = notes
+            )
+            repository.addPettyCash(entry)
+            // Auto Journal Entry for Petty Cash Out
+            val jrnNo = "JRN-KASOUT-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = category,
+                    accountName = "Beban Operasional Kas ($category)",
+                    debitAmount = amount,
+                    creditAmount = 0.0,
+                    description = "Pengeluaran Kas Kecil Kasir: $notes"
+                )
+            )
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = category,
+                    accountName = "Kas Kecil Kasir",
+                    debitAmount = 0.0,
+                    creditAmount = amount,
+                    description = "Kas Keluar Kasir untuk $category"
+                )
+            )
+        }
+    }
+
+    // Stock Adjustment (Stok Opname Audit)
+    fun addStockAdjustment(productId: Long, physicalStock: Int, reason: String = "Rusak / Expired") {
+        viewModelScope.launch {
+            val prod = products.value.find { it.id == productId } ?: return@launch
+            val diff = physicalStock - prod.stock
+            val totalLoss = Math.abs(diff) * prod.buyPrice
+            val adj = StockAdjustmentEntity(
+                productId = productId,
+                productName = prod.name,
+                systemStock = prod.stock,
+                physicalStock = physicalStock,
+                difference = diff,
+                totalLossAmount = totalLoss,
+                reason = reason
+            )
+            repository.addStockAdjustment(adj)
+            // Auto Journal Entry for Stock Adjustment
+            val jrnNo = "JRN-OPNAME-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            if (diff < 0) {
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = prod.name,
+                        accountName = "Beban Kerugian Stok ($reason)",
+                        debitAmount = totalLoss,
+                        creditAmount = 0.0,
+                        description = "Penyesuaian Stok Opname (Berkurang $diff pcs) $reason"
+                    )
+                )
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = prod.name,
+                        accountName = "Persediaan Barang Dagang",
+                        debitAmount = 0.0,
+                        creditAmount = totalLoss,
+                        description = "Pengurangan Stok Fisik akibat $reason"
+                    )
+                )
+            }
         }
     }
 

@@ -787,4 +787,102 @@ object EscPosPrinterHelper {
             try { socket?.close() } catch (_: Exception) {}
         }
     }
+
+    @SuppressLint("MissingPermission")
+    fun printCupStickerLabelBluetooth(
+        deviceAddress: String,
+        storeName: String,
+        customerName: String,
+        itemName: String,
+        modifiersText: String,
+        notes: String
+    ): Result<Boolean> {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            ?: return Result.failure(Exception("Bluetooth tidak didukung"))
+        if (!bluetoothAdapter.isEnabled) {
+            return Result.failure(Exception("Bluetooth belum aktif"))
+        }
+
+        var socket: BluetoothSocket? = null
+        return try {
+            val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+            bluetoothAdapter.cancelDiscovery()
+            socket.connect()
+
+            val out = socket.outputStream
+            out.write(ESC_INIT)
+            out.write(ESC_ALIGN_CENTER)
+            out.write(ESC_BOLD_ON)
+            out.write("${storeName.uppercase()}\n".toByteArray())
+            out.write("a/n: ${customerName.uppercase()}\n".toByteArray())
+            out.write("--------------------------------\n".toByteArray())
+            out.write(ESC_ALIGN_LEFT)
+            out.write(ESC_BOLD_ON)
+            out.write("$itemName\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            if (modifiersText.isNotBlank()) {
+                out.write("Ops: $modifiersText\n".toByteArray())
+            }
+            if (notes.isNotBlank()) {
+                out.write("Ket: $notes\n".toByteArray())
+            }
+            val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+            out.write("Waktu: $timeStr\n".toByteArray())
+            out.write("--------------------------------\n\n".toByteArray())
+
+            writeAutoCutter(out)
+            out.flush()
+            out.close()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            try { socket?.close() } catch (_: Exception) {}
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun printShelfPriceTagBluetooth(
+        deviceAddress: String,
+        storeName: String,
+        productName: String,
+        barcode: String,
+        priceText: String,
+        unitName: String
+    ): Result<Boolean> {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            ?: return Result.failure(Exception("Bluetooth tidak didukung"))
+        if (!bluetoothAdapter.isEnabled) {
+            return Result.failure(Exception("Bluetooth belum aktif"))
+        }
+
+        var socket: BluetoothSocket? = null
+        return try {
+            val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+            bluetoothAdapter.cancelDiscovery()
+            socket.connect()
+
+            val out = socket.outputStream
+            out.write(ESC_INIT)
+            out.write(ESC_ALIGN_CENTER)
+            out.write("${storeName.uppercase()}\n".toByteArray())
+            out.write(ESC_BOLD_ON)
+            out.write("$productName\n".toByteArray())
+            out.write("HARGA: $priceText / $unitName\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            out.write("BARCODE: $barcode\n".toByteArray())
+            out.write("--------------------------------\n\n".toByteArray())
+
+            writeAutoCutter(out)
+            out.flush()
+            out.close()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            try { socket?.close() } catch (_: Exception) {}
+        }
+    }
 }
