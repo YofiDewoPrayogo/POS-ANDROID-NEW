@@ -683,4 +683,108 @@ object EscPosPrinterHelper {
             try { socket?.close() } catch (_: Exception) {}
         }
     }
+
+    @SuppressLint("MissingPermission")
+    fun printSummarySalesReportBluetooth(
+        deviceAddress: String,
+        storeName: String,
+        reportTitle: String,
+        periodText: String,
+        totalRevenueUsd: Double,
+        totalHppCost: Double,
+        totalTransactionsCount: Int,
+        paymentBreakdown: Map<String, Double>,
+        cashierBreakdown: Map<String, Double>,
+        topSellingItems: List<Pair<String, Pair<Int, Double>>>,
+        paperWidth: String = "80mm",
+        formatMoney: (Double) -> String
+    ): Result<Boolean> {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            ?: return Result.failure(Exception("Bluetooth tidak didukung"))
+        if (!bluetoothAdapter.isEnabled) {
+            return Result.failure(Exception("Bluetooth belum aktif"))
+        }
+
+        var socket: BluetoothSocket? = null
+        return try {
+            val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+            bluetoothAdapter.cancelDiscovery()
+            socket.connect()
+
+            val out = socket.outputStream
+            out.write(ESC_INIT)
+
+            val width = if (paperWidth.contains("58")) 32 else 48
+            val lineSeparator = "-".repeat(width)
+            val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
+            out.write(ESC_ALIGN_CENTER)
+            out.write(ESC_BOLD_ON)
+            out.write("${storeName.uppercase()}\n".toByteArray())
+            out.write("${reportTitle.uppercase()}\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            out.write("Periode: $periodText\n".toByteArray())
+            out.write("Waktu Cetak: ${dateFormatter.format(Date())}\n".toByteArray())
+            out.write("$lineSeparator\n".toByteArray())
+
+            // Omzet & Profit Summary
+            out.write(ESC_ALIGN_LEFT)
+            out.write(ESC_BOLD_ON)
+            out.write("1. RINGKASAN OMZET & LABA\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            out.write("Total Penjualan (Gross) : ${formatMoney(totalRevenueUsd)}\n".toByteArray())
+            out.write("Total HPP / Modal Barang: ${formatMoney(totalHppCost)}\n".toByteArray())
+            val grossProfit = totalRevenueUsd - totalHppCost
+            out.write(ESC_BOLD_ON)
+            out.write("Laba Kotor (Gross Profit): ${formatMoney(grossProfit)}\n".toByteArray())
+            out.write("Total Jumlah Transaksi  : $totalTransactionsCount Trx\n".toByteArray())
+            val avgTrx = if (totalTransactionsCount > 0) totalRevenueUsd / totalTransactionsCount else 0.0
+            out.write("Rata-Rata Per Transaksi : ${formatMoney(avgTrx)}\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            out.write("$lineSeparator\n".toByteArray())
+
+            // Breakdown Per Payment Method
+            out.write(ESC_BOLD_ON)
+            out.write("2. PENJUALAN PER METODE BAYAR\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            paymentBreakdown.forEach { (method, amount) ->
+                out.write("$method: ${formatMoney(amount)}\n".toByteArray())
+            }
+            out.write("$lineSeparator\n".toByteArray())
+
+            // Breakdown Per Kasir
+            out.write(ESC_BOLD_ON)
+            out.write("3. LAPORAN DETAIL PER KASIR\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            cashierBreakdown.forEach { (cashier, amount) ->
+                out.write("Kasir $cashier: ${formatMoney(amount)}\n".toByteArray())
+            }
+            out.write("$lineSeparator\n".toByteArray())
+
+            // Top Selling Items (Item Sales Report)
+            if (topSellingItems.isNotEmpty()) {
+                out.write(ESC_BOLD_ON)
+                out.write("4. ITEM SALES REPORT (TERLARIS)\n".toByteArray())
+                out.write(ESC_BOLD_OFF)
+                topSellingItems.forEachIndexed { idx, (item, qtyAndRevenue) ->
+                    val (qty, rev) = qtyAndRevenue
+                    out.write("${idx + 1}. $item\n   $qty pcs • ${formatMoney(rev)}\n".toByteArray())
+                }
+                out.write("$lineSeparator\n".toByteArray())
+            }
+
+            out.write(ESC_ALIGN_CENTER)
+            out.write("=== LAPORAN RESMI POS ===\n\n\n".toByteArray())
+
+            writeAutoCutter(out)
+            out.flush()
+            out.close()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            try { socket?.close() } catch (_: Exception) {}
+        }
+    }
 }

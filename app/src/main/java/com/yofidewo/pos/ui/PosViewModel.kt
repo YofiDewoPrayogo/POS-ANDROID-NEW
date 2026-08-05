@@ -1185,6 +1185,49 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
         }
     }
 
+    fun printSalesReportThermal(
+        reportTitle: String,
+        periodText: String,
+        transactionsList: List<TransactionEntity>,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val address = selectedPrinterAddress.value
+            if (address.isBlank()) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    onError("Pilih printer Bluetooth di Pengaturan terlebih dahulu!")
+                }
+                return@launch
+            }
+
+            val totalRev = transactionsList.sumOf { it.totalAmount }
+            val totalHpp = 0.0
+            val totalCount = transactionsList.size
+            val paymentMap = transactionsList.groupBy { it.paymentMethod }.mapValues { entry -> entry.value.sumOf { it.totalAmount } }
+            val cashierMap = transactionsList.groupBy { it.cashierName }.mapValues { entry -> entry.value.sumOf { it.totalAmount } }
+
+            val result = com.yofidewo.pos.util.EscPosPrinterHelper.printSummarySalesReportBluetooth(
+                deviceAddress = address,
+                storeName = outletName.value,
+                reportTitle = reportTitle,
+                periodText = periodText,
+                totalRevenueUsd = totalRev,
+                totalHppCost = totalHpp,
+                totalTransactionsCount = totalCount,
+                paymentBreakdown = paymentMap,
+                cashierBreakdown = cashierMap,
+                topSellingItems = emptyList(),
+                paperWidth = paperWidth.value,
+                formatMoney = { formatMoney(it) }
+            )
+
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                if (result.isSuccess) onSuccess() else onError(result.exceptionOrNull()?.message ?: "Gagal cetak laporan thermal")
+            }
+        }
+    }
+
     // Data Export & Backup
     fun exportProductsToCsv(context: android.content.Context) {
         viewModelScope.launch {

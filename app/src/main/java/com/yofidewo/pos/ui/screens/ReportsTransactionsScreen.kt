@@ -173,6 +173,25 @@ fun TransactionsHistoryContent(viewModel: PosViewModel) {
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(if (selectedStartDate != null) "Filter Active ✓" else "Pilih Tanggal", fontSize = 12.sp)
                         }
+                        Button(
+                            onClick = {
+                                val periodText = if (selectedStartDate != null && selectedEndDate != null) "Filter Tanggal" else "Semua Data"
+                                viewModel.printSalesReportThermal(
+                                    reportTitle = "Laporan Penjualan & Omzet",
+                                    periodText = periodText,
+                                    transactionsList = filtered,
+                                    onSuccess = { Toast.makeText(context, "Laporan berhasil dicetak ke Printer Thermal!", Toast.LENGTH_SHORT).show() },
+                                    onError = { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+                                )
+                            },
+                            modifier = Modifier.height(40.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(imageVector = Icons.Default.Print, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Cetak Thermal", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
                         OutlinedButton(onClick = { viewModel.exportTransactionsToPdf(context) }, modifier = Modifier.height(40.dp), shape = RoundedCornerShape(10.dp)) {
                             Icon(imageVector = Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(modifier = Modifier.width(4.dp))
