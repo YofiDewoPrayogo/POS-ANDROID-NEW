@@ -309,6 +309,7 @@ fun TransactionsHistoryContent(viewModel: PosViewModel) {
             ) {
                 items(filtered) { tx ->
                     Card(
+                        onClick = { viewModel.selectedTransactionForInvoice.value = tx },
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
