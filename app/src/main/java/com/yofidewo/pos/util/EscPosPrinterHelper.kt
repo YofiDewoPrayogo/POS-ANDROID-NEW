@@ -849,7 +849,10 @@ object EscPosPrinterHelper {
         productName: String,
         barcode: String,
         priceText: String,
-        unitName: String
+        unitName: String,
+        labelWidthMm: Int = 40,
+        showStoreHeader: Boolean = true,
+        fontScalePrice: Int = 2
     ): Result<Boolean> {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
             ?: return Result.failure(Exception("Bluetooth tidak didukung"))
@@ -867,12 +870,28 @@ object EscPosPrinterHelper {
             val out = socket.outputStream
             out.write(ESC_INIT)
             out.write(ESC_ALIGN_CENTER)
-            out.write("${storeName.uppercase()}\n".toByteArray())
+
+            // Line 1: Nama Toko / Header
+            if (showStoreHeader) {
+                out.write("${storeName.uppercase()}\n".toByteArray())
+            }
+
+            // Line 2: Nama Produk & Satuan
             out.write(ESC_BOLD_ON)
-            out.write("$productName\n".toByteArray())
-            out.write("HARGA: $priceText / $unitName\n".toByteArray())
+            out.write("$productName ($unitName)\n".toByteArray())
             out.write(ESC_BOLD_OFF)
-            out.write("BARCODE: $barcode\n".toByteArray())
+
+            // Line 3: Harga Jual (Extra Large Double Height)
+            out.write(ESC_DOUBLE_HEIGHT_ON)
+            out.write(ESC_BOLD_ON)
+            out.write("$priceText\n".toByteArray())
+            out.write(ESC_DOUBLE_HEIGHT_OFF)
+            out.write(ESC_BOLD_OFF)
+
+            // Line 4: Barcode Custom Tag
+            if (barcode.isNotBlank()) {
+                out.write("* $barcode *\n".toByteArray())
+            }
             out.write("--------------------------------\n\n".toByteArray())
 
             writeAutoCutter(out)
