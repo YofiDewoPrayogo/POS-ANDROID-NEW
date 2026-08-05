@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.yofidewo.pos.data.DiscountEntity
+import com.yofidewo.pos.data.StockMutationEntity
 import com.yofidewo.pos.data.TransactionEntity
 import com.yofidewo.pos.data.TransactionItemEntity
 import com.yofidewo.pos.ui.PosViewModel
@@ -80,6 +82,12 @@ fun ReportsTransactionsScreen(
                 text = { Text("Jurnal Umum Akuntansi", fontWeight = FontWeight.Bold) },
                 icon = { Icon(Icons.Default.DateRange, contentDescription = null) }
             )
+            Tab(
+                selected = selectedSubTab == 5,
+                onClick = { selectedSubTab = 5 },
+                text = { Text("Audit Mutasi Stok (IN/OUT)", fontWeight = FontWeight.Bold) },
+                icon = { Icon(Icons.Default.SwapHoriz, contentDescription = null) }
+            )
         }
 
         Box(modifier = Modifier.weight(1f)) {
@@ -89,6 +97,7 @@ fun ReportsTransactionsScreen(
                 2 -> ReturnsContent(viewModel = viewModel)
                 3 -> HutangSupplierContent(viewModel = viewModel)
                 4 -> JournalEntriesContent(viewModel = viewModel)
+                5 -> StockMutationsContent(viewModel = viewModel)
             }
         }
     }
@@ -1485,6 +1494,108 @@ fun JournalEntriesContent(viewModel: PosViewModel) {
                                 if (jrn.creditAmount > 0) {
                                     Text("Kredit: ${viewModel.formatMoney(jrn.creditAmount)}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFB91C1C))
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StockMutationsContent(viewModel: PosViewModel) {
+    val stockMutations by viewModel.stockMutations.collectAsState()
+    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filtered = stockMutations.filter { m ->
+        m.productName.contains(searchQuery, ignoreCase = true) ||
+        m.referenceNumber.contains(searchQuery, ignoreCase = true) ||
+        m.notes.contains(searchQuery, ignoreCase = true)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(text = "Audit Mutasi Stok (Stock Movement Log)", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(text = "Riwayat lengkap barang masuk (+IN) dan barang keluar (-OUT)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Cari produk atau no. ref mutasi...") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (filtered.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Belum ada data mutasi stok recorded.", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(filtered) { mut ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    color = if (mut.type == "IN") Color(0xFF2E7D32) else Color(0xFFC62828),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = if (mut.type == "IN") "+IN" else "-OUT",
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(text = mut.productName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text(text = "Ref: ${mut.referenceNumber} • ${mut.notes}", fontSize = 12.sp, color = Color.Gray)
+                                    Text(text = dateFormatter.format(Date(mut.timestamp)), fontSize = 11.sp, color = Color.Gray)
+                                }
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = if (mut.type == "IN") "+${mut.quantity} Pcs" else "-${mut.quantity} Pcs",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = if (mut.type == "IN") Color(0xFF2E7D32) else Color(0xFFC62828)
+                                )
+                                Text(
+                                    text = "Stok: ${mut.previousStock} → ${mut.finalStock}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
                     }

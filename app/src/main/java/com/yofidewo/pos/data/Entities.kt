@@ -237,7 +237,24 @@ data class ReceivingNoteEntity(
     val goodsPaymentMethod: String = "TUNAI", // TUNAI, QRIS/TRANSFER, HUTANG (TEMPO)
     val shippingPaymentMethod: String = "TUNAI (COD)", // TUNAI (COD), QRIS/TRANSFER, HUTANG (TEMPO)
     val dueDate: Long? = null,
+    val shippingDueDate: Long? = null,
     val paymentStatus: String = "LUNAS", // LUNAS, BELUM LUNAS
+    val shippingPaymentStatus: String = "LUNAS", // LUNAS, BELUM LUNAS
+    val invoiceDate: Long = System.currentTimeMillis(),
+    val notes: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "stock_mutations")
+data class StockMutationEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val productId: Long,
+    val productName: String,
+    val type: String, // "IN" or "OUT"
+    val quantity: Int,
+    val previousStock: Int,
+    val finalStock: Int,
+    val referenceNumber: String = "",
     val notes: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )

@@ -270,6 +270,15 @@ interface StockAdjustmentDao {
 }
 
 @Dao
+interface StockMutationDao {
+    @Query("SELECT * FROM stock_mutations ORDER BY timestamp DESC")
+    fun getAllStockMutations(): Flow<List<StockMutationEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStockMutation(mutation: StockMutationEntity): Long
+}
+
+@Dao
 interface CustomerDao {
     @Query("SELECT * FROM customers ORDER BY name ASC")
     fun getAllCustomers(): kotlinx.coroutines.flow.Flow<List<CustomerEntity>>

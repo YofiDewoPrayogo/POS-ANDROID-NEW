@@ -27,10 +27,11 @@ import kotlinx.coroutines.launch
         HoldOrderEntity::class,
         PettyCashEntity::class,
         StockAdjustmentEntity::class,
+        StockMutationEntity::class,
         CustomerEntity::class,
         DiscountEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class PosDatabase : RoomDatabase() {
@@ -51,6 +52,7 @@ abstract class PosDatabase : RoomDatabase() {
     abstract fun holdOrderDao(): HoldOrderDao
     abstract fun pettyCashDao(): PettyCashDao
     abstract fun stockAdjustmentDao(): StockAdjustmentDao
+    abstract fun stockMutationDao(): StockMutationDao
 
     companion object {
         @Volatile

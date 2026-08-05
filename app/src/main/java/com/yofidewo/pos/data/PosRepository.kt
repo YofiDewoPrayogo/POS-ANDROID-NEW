@@ -141,10 +141,23 @@ class PosRepository(private val db: PosDatabase, context: Context) {
                 prod.buyPrice
             }
 
+            val finalStk = currentStock + newQty
             db.productDao().updateProduct(prod.copy(
-                stock = currentStock + newQty,
+                stock = finalStk,
                 buyPrice = updatedBuyPrice
             ))
+            db.stockMutationDao().insertStockMutation(
+                StockMutationEntity(
+                    productId = prod.id,
+                    productName = prod.name,
+                    type = "IN",
+                    quantity = newQty,
+                    previousStock = currentStock,
+                    finalStock = finalStk,
+                    referenceNumber = note.referenceNumber,
+                    notes = "Penerimaan Barang / Purchase Note"
+                )
+            )
         }
     }
 
@@ -154,8 +167,21 @@ class PosRepository(private val db: PosDatabase, context: Context) {
         db.purchaseReturnDao().insertPurchaseReturn(ret)
         val prod = db.productDao().getProductById(ret.productId)
         if (prod != null) {
-            val updatedStock = (prod.stock - ret.quantityReturned).coerceAtLeast(0)
+            val prevStk = prod.stock
+            val updatedStock = (prevStk - ret.quantityReturned).coerceAtLeast(0)
             db.productDao().updateProduct(prod.copy(stock = updatedStock))
+            db.stockMutationDao().insertStockMutation(
+                StockMutationEntity(
+                    productId = prod.id,
+                    productName = prod.name,
+                    type = "OUT",
+                    quantity = ret.quantityReturned,
+                    previousStock = prevStk,
+                    finalStock = updatedStock,
+                    referenceNumber = ret.returnNumber,
+                    notes = "Retur Pembelian Supplier: ${ret.reason}"
+                )
+            )
         }
     }
 
@@ -163,6 +189,32 @@ class PosRepository(private val db: PosDatabase, context: Context) {
     val journalEntries: Flow<List<JournalEntryEntity>> = db.journalEntryDao().getAllJournalEntries()
     suspend fun addJournalEntry(entry: JournalEntryEntity) {
         db.journalEntryDao().insertJournalEntry(entry)
+    }
+
+    // Stock Mutations
+    val stockMutations: Flow<List<StockMutationEntity>> = db.stockMutationDao().getAllStockMutations()
+    suspend fun recordStockMutation(
+        productId: Long,
+        productName: String,
+        type: String,
+        quantity: Int,
+        previousStock: Int,
+        finalStock: Int,
+        referenceNumber: String,
+        notes: String
+    ) {
+        db.stockMutationDao().insertStockMutation(
+            StockMutationEntity(
+                productId = productId,
+                productName = productName,
+                type = type,
+                quantity = quantity,
+                previousStock = previousStock,
+                finalStock = finalStock,
+                referenceNumber = referenceNumber,
+                notes = notes
+            )
+        )
     }
 
     // Cashier Shifts
@@ -195,7 +247,23 @@ class PosRepository(private val db: PosDatabase, context: Context) {
     suspend fun addStockAdjustment(adj: StockAdjustmentEntity): Long {
         val prod = db.productDao().getProductById(adj.productId)
         if (prod != null) {
-            db.productDao().updateProduct(prod.copy(stock = adj.physicalStock))
+            val prevStk = prod.stock
+            val finalStk = adj.physicalStock
+            val typeStr = if (finalStk >= prevStk) "IN" else "OUT"
+            val qtyDiff = Math.abs(finalStk - prevStk)
+            db.productDao().updateProduct(prod.copy(stock = finalStk))
+            db.stockMutationDao().insertStockMutation(
+                StockMutationEntity(
+                    productId = prod.id,
+                    productName = prod.name,
+                    type = typeStr,
+                    quantity = qtyDiff,
+                    previousStock = prevStk,
+                    finalStock = finalStk,
+                    referenceNumber = "OPNAME",
+                    notes = "Stok Opname: ${adj.reason}"
+                )
+            )
         }
         return db.stockAdjustmentDao().insertStockAdjustment(adj)
     }

@@ -278,6 +278,9 @@ fun AddReceivingNoteDialog(
     var goodsPaymentMethod by remember { mutableStateOf("TUNAI") }
     var shippingPaymentMethod by remember { mutableStateOf("TUNAI (COD)") }
     var daysTempoStr by remember { mutableStateOf("30") }
+    var shippingDaysTempoStr by remember { mutableStateOf("30") }
+    val todayDateStr = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()) }
+    var invoiceDateStr by remember { mutableStateOf(todayDateStr) }
 
     val rows = remember {
         mutableStateListOf(
@@ -358,10 +361,19 @@ fun AddReceivingNoteDialog(
                                         modifier = Modifier.fillMaxWidth()
                                     )
 
-                                     OutlinedTextField(
+                                    OutlinedTextField(
                                         value = refNumber,
                                         onValueChange = { refNumber = it },
                                         label = { Text("No. Referensi / Surat Jalan (e.g. SJ-20260805-001)") },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+
+                                    OutlinedTextField(
+                                        value = invoiceDateStr,
+                                        onValueChange = { invoiceDateStr = it },
+                                        label = { Text("Tanggal Invoice Supplier (dd/MM/yyyy)") },
+                                        placeholder = { Text("05/08/2026") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -412,6 +424,17 @@ fun AddReceivingNoteDialog(
                                                     modifier = Modifier.weight(1f)
                                                 )
                                             }
+                                        }
+                                        if (shippingPaymentMethod.contains("HUTANG", ignoreCase = true)) {
+                                            OutlinedTextField(
+                                                value = shippingDaysTempoStr,
+                                                onValueChange = { shippingDaysTempoStr = it },
+                                                label = { Text("Jatuh Tempo Hutang Ongkir Ekspedisi (Hari)") },
+                                                placeholder = { Text("30") },
+                                                singleLine = true,
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
                                         }
                                     }
 
@@ -629,6 +652,15 @@ fun AddReceivingNoteDialog(
                                     val calculatedDueDate = if (isDebt) System.currentTimeMillis() + (daysTempo * 24 * 3600 * 1000L) else null
                                     val status = if (isDebt) "BELUM LUNAS" else "LUNAS"
 
+                                    val isShippingDebt = shippingPaymentMethod.contains("HUTANG", ignoreCase = true)
+                                    val shipDaysTempo = shippingDaysTempoStr.toLongOrNull() ?: 30L
+                                    val calculatedShippingDueDate = if (isShippingDebt) System.currentTimeMillis() + (shipDaysTempo * 24 * 3600 * 1000L) else null
+                                    val shipStatus = if (isShippingDebt) "BELUM LUNAS" else "LUNAS"
+
+                                    val invoiceDateMillis = try {
+                                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(invoiceDateStr)?.time ?: System.currentTimeMillis()
+                                    } catch (e: Exception) { System.currentTimeMillis() }
+
                                     viewModel.addReceivingNotesBatch(
                                         supplierName = supplierName,
                                         refNumber = refNumber,
@@ -639,7 +671,10 @@ fun AddReceivingNoteDialog(
                                         goodsPaymentMethod = goodsPaymentMethod,
                                         shippingPaymentMethod = shippingPaymentMethod,
                                         dueDate = calculatedDueDate,
+                                        shippingDueDate = calculatedShippingDueDate,
                                         paymentStatus = status,
+                                        shippingPaymentStatus = shipStatus,
+                                        invoiceDate = invoiceDateMillis,
                                         notes = notesCombined
                                     )
 

@@ -45,6 +45,7 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val holdOrders = repository.holdOrders.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val pettyCashEntries = repository.pettyCashEntries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val stockAdjustments = repository.stockAdjustments.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val stockMutations = repository.stockMutations.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val discounts = repository.activeDiscounts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -678,6 +679,21 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
             val id = repository.checkoutTransaction(transaction, itemsToProcess)
             val savedTx = transaction.copy(id = id)
 
+            itemsToProcess.forEach { (prod, qty) ->
+                val prevStk = prod.stock
+                val finalStk = (prevStk - qty).coerceAtLeast(0)
+                repository.recordStockMutation(
+                    productId = prod.id,
+                    productName = prod.name,
+                    type = "OUT",
+                    quantity = qty,
+                    previousStock = prevStk,
+                    finalStock = finalStk,
+                    referenceNumber = savedTx.invoiceNumber,
+                    notes = "Penjualan Kasir / Invoice"
+                )
+            }
+
             // Auto Journal Entry for Sales Transaction
             val jrnNo = "JRN-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
             val paymentAcc = if (savedTx.paymentMethod.contains("Piutang", ignoreCase = true)) "Piutang Pelanggan (${savedTx.customerName})" else "Kas / Bank (${savedTx.paymentMethod})"
@@ -867,7 +883,10 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
         goodsPaymentMethod: String = "TUNAI",
         shippingPaymentMethod: String = "TUNAI (COD)",
         dueDate: Long? = null,
+        shippingDueDate: Long? = null,
         paymentStatus: String = "LUNAS",
+        shippingPaymentStatus: String = "LUNAS",
+        invoiceDate: Long = System.currentTimeMillis(),
         notes: String
     ) {
         viewModelScope.launch {
@@ -892,7 +911,10 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                         goodsPaymentMethod = goodsPaymentMethod,
                         shippingPaymentMethod = shippingPaymentMethod,
                         dueDate = dueDate,
+                        shippingDueDate = shippingDueDate,
                         paymentStatus = paymentStatus,
+                        shippingPaymentStatus = shippingPaymentStatus,
+                        invoiceDate = invoiceDate,
                         notes = notes
                     )
                     repository.addReceivingNote(note)
