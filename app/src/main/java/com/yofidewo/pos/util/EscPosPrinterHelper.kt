@@ -61,14 +61,62 @@ object EscPosPrinterHelper {
     }
 
     /**
+     * Converts an Android Bitmap to ESC/POS GS v 0 raster image bytes
+     */
+    fun bitmapToEscPosRaster(bitmap: android.graphics.Bitmap, paperWidthMm: Int = 80): ByteArray {
+        val maxPx = if (paperWidthMm == 80) 576 else 384
+        val scale = maxPx.toFloat() / bitmap.width.toFloat()
+        val targetWidth = ((if (scale < 1.0f) (bitmap.width * scale).toInt() else bitmap.width) / 8 * 8).coerceAtLeast(8)
+        val targetHeight = (if (scale < 1.0f) (bitmap.height * scale).toInt() else bitmap.height).coerceAtLeast(1)
+
+        val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+        val widthBytes = targetWidth / 8
+        val xL = (widthBytes % 256).toByte()
+        val xH = (widthBytes / 256).toByte()
+        val yL = (targetHeight % 256).toByte()
+        val yH = (targetHeight / 256).toByte()
+
+        val header = byteArrayOf(0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH)
+        val imageBytes = ByteArray(widthBytes * targetHeight)
+
+        var byteIndex = 0
+        for (y in 0 until targetHeight) {
+            for (xByte in 0 until widthBytes) {
+                var currentByte = 0
+                for (bit in 0 until 8) {
+                    val x = xByte * 8 + bit
+                    val pixel = scaledBitmap.getPixel(x, y)
+                    val r = (pixel shr 16) and 0xFF
+                    val g = (pixel shr 8) and 0xFF
+                    val b = pixel and 0xFF
+                    val luminance = (0.299 * r + 0.587 * g + 0.114 * b).toInt()
+                    if (luminance < 160) {
+                        currentByte = currentByte or (0x80 shr bit)
+                    }
+                }
+                imageBytes[byteIndex++] = currentByte.toByte()
+            }
+        }
+        return header + imageBytes
+    }
+
+    /**
      * Generates a plain text representation of the receipt suitable for 58mm (32 chars) or 80mm (48 chars)
      */
     fun buildTextReceipt(
         transaction: TransactionEntity,
         items: List<TransactionItemEntity>,
         storeName: String = "WARUNGKU POS",
-        storeAddress: String = "Jl. Merdeka No. 123",
-        paperWidthMm: Int = 58,
+        storeAddress: String = "",
+        storePhone: String = "",
+        receiptHeader: String = "",
+        receiptFooter: String = "",
+        paperWidthMm: Int = 80,
+        showAddress: Boolean = true,
+        showPhone: Boolean = true,
+        showCashier: Boolean = true,
+        showCustomer: Boolean = true,
+        showFooter: Boolean = true,
         formatMoney: (Double) -> String
     ): String {
         val maxCols = if (paperWidthMm == 80) 48 else 32
@@ -94,23 +142,29 @@ object EscPosPrinterHelper {
 
         // Header
         sb.appendLine(centerText(storeName))
-        if (storeAddress.isNotBlank()) sb.appendLine(centerText(storeAddress))
+        if (showAddress && storeAddress.isNotBlank()) sb.appendLine(centerText(storeAddress))
+        if (showPhone && storePhone.isNotBlank()) sb.appendLine(centerText("Telp: $storePhone"))
+        if (receiptHeader.isNotBlank()) {
+            receiptHeader.split("\n").forEach { line ->
+                if (line.isNotBlank()) sb.appendLine(centerText(line))
+            }
+        }
         sb.appendLine(lineSeparator)
 
-        // Meta Info
+        // Metadata
         val df = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         sb.appendLine(justifyRow("Faktur:", transaction.invoiceNumber))
         sb.appendLine(justifyRow("Tanggal:", df.format(Date(transaction.timestamp))))
-        sb.appendLine(justifyRow("Kasir:", transaction.cashierName))
-        sb.appendLine(justifyRow("Pelanggan:", transaction.customerName))
+        if (showCashier && transaction.cashierName.isNotBlank()) sb.appendLine(justifyRow("Kasir:", transaction.cashierName))
+        if (showCustomer && transaction.customerName.isNotBlank()) sb.appendLine(justifyRow("Pelanggan:", transaction.customerName))
         sb.appendLine(lineSeparator)
 
         // Items
         items.forEach { item ->
             sb.appendLine(item.productName)
-            val qtyPriceStr = "${item.quantity} x ${formatMoney(item.price)}"
+            val qtyPriceStr = "  ${item.quantity} x ${formatMoney(item.price)}"
             val subtotalStr = formatMoney(item.subtotal)
-            sb.appendLine(justifyRow("  $qtyPriceStr", subtotalStr))
+            sb.appendLine(justifyRow(qtyPriceStr, subtotalStr))
         }
 
         sb.appendLine(lineSeparator)
@@ -127,9 +181,17 @@ object EscPosPrinterHelper {
         sb.appendLine(lineSeparator)
 
         // Footer
-        sb.appendLine(centerText("Terima Kasih atas Kunjungan Anda"))
-        sb.appendLine(centerText("Barang yang sudah dibeli"))
-        sb.appendLine(centerText("tidak dapat ditukar/dikembalikan"))
+        if (showFooter) {
+            if (receiptFooter.isNotBlank()) {
+                receiptFooter.split("\n").forEach { line ->
+                    if (line.isNotBlank()) sb.appendLine(centerText(line))
+                }
+            } else {
+                sb.appendLine(centerText("Terima Kasih atas Kunjungan Anda!"))
+                sb.appendLine(centerText("Barang yang sudah dibeli"))
+                sb.appendLine(centerText("tidak dapat ditukar/dikembalikan"))
+            }
+        }
         sb.appendLine("\n\n")
 
         return sb.toString()
@@ -144,8 +206,19 @@ object EscPosPrinterHelper {
         transaction: TransactionEntity,
         items: List<TransactionItemEntity>,
         storeName: String = "WARUNGKU POS",
-        storeAddress: String = "Jl. Merdeka No. 123",
-        paperWidthMm: Int = 58,
+        storeAddress: String = "",
+        storePhone: String = "",
+        receiptHeader: String = "",
+        receiptFooter: String = "",
+        paperWidthMm: Int = 80,
+        useAutoCutter: Boolean = true,
+        useHeaderLogo: Boolean = true,
+        logoBitmap: android.graphics.Bitmap? = null,
+        showAddress: Boolean = true,
+        showPhone: Boolean = true,
+        showCashier: Boolean = true,
+        showCustomer: Boolean = true,
+        showFooter: Boolean = true,
         formatMoney: (Double) -> String
     ): Result<Boolean> {
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -176,10 +249,7 @@ object EscPosPrinterHelper {
             try {
                 socket.connect()
             } catch (e: Exception) {
-                // Fallback attempt with reflection port 1 if standard SPP fails
-                try {
-                    socket.close()
-                } catch (_: Exception) {}
+                try { socket.close() } catch (_: Exception) {}
                 val m = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
                 socket = m.invoke(device, 1) as BluetoothSocket
                 socket.connect()
@@ -215,7 +285,19 @@ object EscPosPrinterHelper {
             // 2. Open Cash Drawer
             writeBytes(ESC_KICK_DRAWER)
 
-            // 3. Store Header (Centered & Bold)
+            // 3. Store Logo (GS v 0 Raster Bitmap)
+            if (useHeaderLogo && logoBitmap != null) {
+                try {
+                    writeBytes(ESC_ALIGN_CENTER)
+                    val rasterBytes = bitmapToEscPosRaster(logoBitmap, paperWidthMm)
+                    writeBytes(rasterBytes)
+                    writeText("\n")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 4. Store Header (Centered & Bold)
             writeBytes(ESC_ALIGN_CENTER)
             writeBytes(ESC_BOLD_ON)
             writeBytes(ESC_DOUBLE_HEIGHT_ON)
@@ -223,21 +305,29 @@ object EscPosPrinterHelper {
             writeBytes(ESC_DOUBLE_HEIGHT_OFF)
             writeBytes(ESC_BOLD_OFF)
 
-            if (storeAddress.isNotBlank()) {
+            if (showAddress && storeAddress.isNotBlank()) {
                 writeText("$storeAddress\n")
+            }
+            if (showPhone && storePhone.isNotBlank()) {
+                writeText("Telp: $storePhone\n")
+            }
+            if (receiptHeader.isNotBlank()) {
+                receiptHeader.split("\n").forEach { line ->
+                    if (line.isNotBlank()) writeText("$line\n")
+                }
             }
             writeBytes(ESC_ALIGN_LEFT)
             writeText(lineSeparator)
 
-            // 4. Metadata
+            // 5. Metadata
             val df = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
             writeJustified("Faktur:", transaction.invoiceNumber)
             writeJustified("Tanggal:", df.format(Date(transaction.timestamp)))
-            writeJustified("Kasir:", transaction.cashierName)
-            writeJustified("Pelanggan:", transaction.customerName)
+            if (showCashier && transaction.cashierName.isNotBlank()) writeJustified("Kasir:", transaction.cashierName)
+            if (showCustomer && transaction.customerName.isNotBlank()) writeJustified("Pelanggan:", transaction.customerName)
             writeText(lineSeparator)
 
-            // 5. Items List
+            // 6. Items List
             items.forEach { item ->
                 writeText("${item.productName}\n")
                 val qtyPriceStr = "  ${item.quantity} x ${formatMoney(item.price)}"
@@ -246,7 +336,7 @@ object EscPosPrinterHelper {
             }
             writeText(lineSeparator)
 
-            // 6. Totals
+            // 7. Totals
             writeJustified("Subtotal:", formatMoney(transaction.subTotalAmount))
             if (transaction.discountAmount > 0) {
                 writeJustified("Diskon:", "-${formatMoney(transaction.discountAmount)}")
@@ -261,14 +351,26 @@ object EscPosPrinterHelper {
             writeJustified("Kembali:", formatMoney(transaction.changeAmount))
             writeText(lineSeparator)
 
-            // 7. Footer
-            writeBytes(ESC_ALIGN_CENTER)
-            writeText("Terima Kasih atas Kunjungan Anda!\n")
-            writeText("Barang yang sudah dibeli\n")
-            writeText("tidak dapat ditukar/dikembalikan.\n")
+            // 8. Footer
+            if (showFooter) {
+                writeBytes(ESC_ALIGN_CENTER)
+                if (receiptFooter.isNotBlank()) {
+                    receiptFooter.split("\n").forEach { line ->
+                        if (line.isNotBlank()) writeText("$line\n")
+                    }
+                } else {
+                    writeText("Terima Kasih atas Kunjungan Anda!\n")
+                    writeText("Barang yang sudah dibeli\n")
+                    writeText("tidak dapat ditukar/dikembalikan.\n")
+                }
+            }
 
-            // 8. Auto-Cutter (Feed paper & cut)
-            writeAutoCutter(outputStream)
+            // 9. Auto-Cutter (Feed paper & cut if enabled)
+            if (useAutoCutter) {
+                writeAutoCutter(outputStream)
+            } else {
+                writeBytes("\n\n\n\n".toByteArray())
+            }
 
             outputStream.flush()
             // Pause 800ms for Bluetooth hardware buffer to finish transmitting all bytes & cutter commands

@@ -58,9 +58,14 @@ import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import com.yofidewo.pos.ui.components.CustomLogo
 import com.yofidewo.pos.data.RoleEntity
 import com.yofidewo.pos.data.UserEntity
+import com.yofidewo.pos.data.TransactionEntity
+import com.yofidewo.pos.data.TransactionItemEntity
 import com.yofidewo.pos.ui.PosViewModel
 import com.yofidewo.pos.util.EscPosPrinterHelper
 import kotlinx.coroutines.Dispatchers
@@ -1396,8 +1401,14 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
     var connectionType by remember { mutableStateOf(viewModel.connectionType.value) }
     var networkIp by remember { mutableStateOf(viewModel.networkIp.value) }
     var useCashDrawer by remember { mutableStateOf(viewModel.useCashDrawer.value) }
+    var useAutoCutter by remember { mutableStateOf(viewModel.useAutoCutter.value) }
     var headerText by remember { mutableStateOf(viewModel.receiptHeader.value) }
     var useHeaderLogo by remember { mutableStateOf(viewModel.useHeaderLogo.value) }
+    var showStoreAddress by remember { mutableStateOf(viewModel.showStoreAddress.value) }
+    var showStorePhone by remember { mutableStateOf(viewModel.showStorePhone.value) }
+    var showCashierName by remember { mutableStateOf(viewModel.showCashierName.value) }
+    var showCustomerName by remember { mutableStateOf(viewModel.showCustomerName.value) }
+    var showFooterText by remember { mutableStateOf(viewModel.showFooterText.value) }
     var footerText by remember { mutableStateOf(viewModel.receiptFooter.value) }
 
     var isSearching by remember { mutableStateOf(false) }
@@ -1552,54 +1563,67 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                                 Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Buka Pengaturan Bluetooth HP (Pairing Printer Baru)", fontSize = 12.sp)
-                            }
 
-                            if (isSearching || selectedPrinterAddress.isBlank()) {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Text("Pilih Printer Bluetooth Terpasang:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                if (displayPrinters.isEmpty()) {
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Text(
-                                                "Belum ada printer Bluetooth terdeteksi/terhubung.",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.error
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                "1. Pastikan Bluetooth HP & Printer Thermal 58mm/80mm Anda sudah NYALA.\n2. Klik 'Buka Pengaturan Bluetooth HP' di atas untuk Pairing dengan printer.\n3. Setelah Paired, tekan 'Pindai Perangkat Bluetooth' di atas.",
-                                                fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                if (isSearching || selectedPrinterAddress.isBlank()) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    val pairedList = remember(refreshKey) {
+                                        try {
+                                            EscPosPrinterHelper.getPairedDevices()
+                                        } catch (e: SecurityException) {
+                                            emptyList()
                                         }
                                     }
-                                } else {
-                                    displayPrinters.forEach { pFull ->
-                                        val parts = pFull.split(" (")
-                                        val pName = parts[0]
-                                        val pAddress = if (parts.size > 1) parts[1].replace(")", "") else "00:11:22:33:44:55"
 
+                                    Text("Pilih Printer Bluetooth Terpasang:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    if (pairedList.isEmpty()) {
                                         Card(
-                                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
-                                                viewModel.setBluetoothPrinter(pName, pAddress)
-                                                isSearching = false
-                                                Toast.makeText(context, "Terhubung ke $pName", Toast.LENGTH_SHORT).show()
-                                            }
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                         ) {
-                                            Row(
-                                                modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Column {
-                                                    Text(pName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                                    Text(pAddress, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Text(
+                                                    "Belum ada printer Bluetooth terdeteksi/terhubung.",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.sp,
+                                                    color = MaterialTheme.colorScheme.error
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    "1. Pastikan Bluetooth HP & Printer Thermal Anda sudah NYALA.\n2. Buka Pengaturan Bluetooth HP untuk Pairing.\n3. Tekan Refresh di atas.",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            pairedList.forEach { dev ->
+                                                val isSelected = dev.address == selectedPrinterAddress
+                                                Card(
+                                                    onClick = {
+                                                        viewModel.setBluetoothPrinter(dev.name, dev.address)
+                                                        Toast.makeText(context, "Printer ${dev.name} dipilih!", Toast.LENGTH_SHORT).show()
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    colors = CardDefaults.cardColors(
+                                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                                                    ),
+                                                    border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.padding(12.dp),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(dev.name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                                            Text(dev.address, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                        }
+                                                        Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                                    }
                                                 }
-                                                Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                             }
                                         }
                                     }
@@ -1618,7 +1642,7 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                         Text("Test Printer & Cash Drawer", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "Kirim perintah test ke printer yang dipilih untuk verifikasi koneksi.",
+                            "Kirim perintah test ke printer yang dipilih untuk verifikasi koneksi & pemotong kertas.",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1690,11 +1714,11 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                 }
             }
 
-            // Section 3: Paper Size & Cash Drawer
+            // Section 3: Paper Size, Auto-Cutter & Cash Drawer Toggles
             item {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Ukuran Kertas & Hardware", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Ukuran Kertas & Hardware Printer", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text("Ukuran Kertas Thermal Struk:", fontSize = 13.sp)
@@ -1702,13 +1726,13 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                             FilterChip(
                                 selected = paperWidth == "58mm",
                                 onClick = { paperWidth = "58mm" },
-                                label = { Text("58 mm (Standard)") },
+                                label = { Text("58 mm (32 Karakter)") },
                                 modifier = Modifier.weight(1f)
                             )
                             FilterChip(
                                 selected = paperWidth == "80mm",
                                 onClick = { paperWidth = "80mm" },
-                                label = { Text("80 mm (Wide)") },
+                                label = { Text("80 mm (48 Karakter)") },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -1719,9 +1743,25 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text("Gunakan Cash Drawer (Laci Uang)", fontWeight = FontWeight.SemiBold)
-                                Text("Buka laci otomatis saat cetak struk", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Pemotong Kertas Otomatis (Auto-Cutter)", fontWeight = FontWeight.SemiBold)
+                                Text("Kirim sinyal potong kertas otomatis ke printer", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(checked = useAutoCutter, onCheckedChange = { useAutoCutter = it })
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Buka Cash Drawer (Laci Uang)", fontWeight = FontWeight.SemiBold)
+                                Text("Buka laci uang otomatis saat cetak", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Switch(checked = useCashDrawer, onCheckedChange = { useCashDrawer = it })
                         }
@@ -1729,54 +1769,64 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                 }
             }
 
-            // Section 3: Header & Footer Struk
+            // Section 4: Sakelar Tampil/Sembunyi Komponen Struk ("Hide Ini Hide Itu")
             item {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Kustomisasi Tampilan Struk", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Text("Pengaturan Tampil / Sembunyikan Komponen Struk", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Atur elemen mana saja yang ingin ditampilkan di struk cetak", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text("Gunakan Logo Outlet di Header Struk", fontWeight = FontWeight.Medium)
-                                Text("Mengambil logo dari Pengaturan Outlet", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("🖼️ Cetak Logo Toko di Header", fontSize = 13.sp)
                             Switch(checked = useHeaderLogo, onCheckedChange = { useHeaderLogo = it })
                         }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                        if (useHeaderLogo) {
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                border = BorderStroke(1.dp, Color.LightGray),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(12.dp)
-                                        .fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    CustomLogo(modifier = Modifier.size(44.dp))
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(viewModel.outletName.value, fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 14.sp)
-                                    Text(headerText, fontSize = 11.sp, color = Color.DarkGray)
-                                    Text("-----------------------------", fontSize = 10.sp, color = Color.Gray)
-                                    Text("[ Preview Logo & Header Struk ]", fontSize = 10.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Medium)
-                                }
-                            }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("📍 Tampilkan Alamat Toko", fontSize = 13.sp)
+                            Switch(checked = showStoreAddress, onCheckedChange = { showStoreAddress = it })
                         }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("📞 Tampilkan Telepon Toko", fontSize = 13.sp)
+                            Switch(checked = showStorePhone, onCheckedChange = { showStorePhone = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("👤 Tampilkan Nama Kasir", fontSize = 13.sp)
+                            Switch(checked = showCashierName, onCheckedChange = { showCashierName = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("👥 Tampilkan Nama Pelanggan", fontSize = 13.sp)
+                            Switch(checked = showCustomerName, onCheckedChange = { showCustomerName = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("📝 Tampilkan Pesan Footer", fontSize = 13.sp)
+                            Switch(checked = showFooterText, onCheckedChange = { showFooterText = it })
+                        }
+                    }
+                }
+            }
+
+            // Section 5: Header & Footer Text Edit
+            item {
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Kustomisasi Teks Header & Footer", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         OutlinedTextField(
                             value = headerText,
                             onValueChange = { headerText = it },
-                            label = { Text("Pesan Header Struk") },
+                            label = { Text("Pesan Header Kustom") },
+                            placeholder = { Text("e.g., Selamat Datang di WarungKu POS!") },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -1784,8 +1834,105 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                         OutlinedTextField(
                             value = footerText,
                             onValueChange = { footerText = it },
-                            label = { Text("Pesan Footer Struk (Bawah Struk)") },
+                            label = { Text("Pesan Footer Kustom (Bawah Struk)") },
+                            placeholder = { Text("e.g., Terima Kasih!\nBarang tidak dapat dikembalikan.") },
                             modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            // Section 6: Live Thermal Receipt Preview ("Bisa Lihat Hasilnya")
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text(
+                                "📄 PREVIEW TIBA-TIBA (LIVE RECEIPT PREVIEW - ${paperWidth})",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val previewWidthMm = if (paperWidth.contains("80")) 80 else 58
+                        val dummyTx = remember {
+                            TransactionEntity(
+                                id = 999,
+                                invoiceNumber = "INV-2026080599999",
+                                userId = 1,
+                                timestamp = System.currentTimeMillis(),
+                                subTotalAmount = 50000.0,
+                                discountAmount = 5000.0,
+                                totalAmount = 45000.0,
+                                paidAmount = 50000.0,
+                                changeAmount = 5000.0,
+                                paymentMethod = "TUNAI",
+                                cashierName = "Kasir Mba Ani",
+                                customerName = "Pelanggan Umum"
+                            )
+                        }
+                        val dummyItems = remember {
+                            listOf(
+                                TransactionItemEntity(id = 1, transactionId = 999, productId = 1, productName = "Beras Super 5kg", quantity = 1, price = 45000.0, subtotal = 45000.0),
+                                TransactionItemEntity(id = 2, transactionId = 999, productId = 2, productName = "Minyak Goreng 1L", quantity = 1, price = 14000.0, subtotal = 14000.0)
+                            )
+                        }
+
+                        val liveText = remember(
+                            headerText, footerText, paperWidth, useHeaderLogo,
+                            showStoreAddress, showStorePhone, showCashierName, showCustomerName, showFooterText,
+                            viewModel.outletName.value, viewModel.outletAddress.value, viewModel.outletPhone.value
+                        ) {
+                            EscPosPrinterHelper.buildTextReceipt(
+                                transaction = dummyTx,
+                                items = dummyItems,
+                                storeName = viewModel.outletName.value,
+                                storeAddress = viewModel.outletAddress.value,
+                                storePhone = viewModel.outletPhone.value,
+                                receiptHeader = headerText,
+                                receiptFooter = footerText,
+                                paperWidthMm = previewWidthMm,
+                                showAddress = showStoreAddress,
+                                showPhone = showStorePhone,
+                                showCashier = showCashierName,
+                                showCustomer = showCustomerName,
+                                showFooter = showFooterText,
+                                formatMoney = { viewModel.formatMoney(it) }
+                            )
+                        }
+
+                        if (useHeaderLogo) {
+                            CustomLogo(modifier = Modifier.size(48.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+
+                        Text(
+                            text = liveText,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            color = Color.Black,
+                            lineHeight = 15.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFFAFAFA), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                .padding(12.dp)
                         )
                     }
                 }
@@ -1799,8 +1946,14 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                         viewModel.connectionType.value = connectionType
                         viewModel.networkIp.value = networkIp
                         viewModel.useCashDrawer.value = useCashDrawer
+                        viewModel.useAutoCutter.value = useAutoCutter
                         viewModel.receiptHeader.value = headerText
                         viewModel.useHeaderLogo.value = useHeaderLogo
+                        viewModel.showStoreAddress.value = showStoreAddress
+                        viewModel.showStorePhone.value = showStorePhone
+                        viewModel.showCashierName.value = showCashierName
+                        viewModel.showCustomerName.value = showCustomerName
+                        viewModel.showFooterText.value = showFooterText
                         viewModel.receiptFooter.value = footerText
                         Toast.makeText(context, "Pengaturan printer & struk berhasil disimpan!", Toast.LENGTH_SHORT).show()
                     },

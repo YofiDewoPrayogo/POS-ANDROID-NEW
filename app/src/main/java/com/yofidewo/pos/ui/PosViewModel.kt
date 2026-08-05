@@ -50,13 +50,19 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val selectedTransactionForInvoice = MutableStateFlow<TransactionEntity?>(null)
 
     // Hardware, Printer & Outlet Settings
-    val paperWidth = MutableStateFlow("58mm")
+    val paperWidth = MutableStateFlow("80mm")
     val connectionType = MutableStateFlow("Bluetooth")
     val networkIp = MutableStateFlow("192.168.1.200")
     val useCashDrawer = MutableStateFlow(true)
+    val useAutoCutter = MutableStateFlow(true)
     val receiptHeader = MutableStateFlow("Selamat Datang di WarungKu")
     val useHeaderLogo = MutableStateFlow(true)
-    val receiptFooter = MutableStateFlow("Terima Kasih Atas Kunjungan Anda!\nBarang yang sudah dibeli tidak dapat ditukar.")
+    val showStoreAddress = MutableStateFlow(true)
+    val showStorePhone = MutableStateFlow(true)
+    val showCashierName = MutableStateFlow(true)
+    val showCustomerName = MutableStateFlow(true)
+    val showFooterText = MutableStateFlow(true)
+    val receiptFooter = MutableStateFlow("Terima Kasih Atas Kunjungan Anda!\nBarang yang sudah dibeli tidak dapat ditukar/dikembalikan.")
 
     val selectedPrinterAddress = MutableStateFlow("")
     val selectedPrinterName = MutableStateFlow("Belum Ada Printer Dipilih")
@@ -905,13 +911,36 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                 }
                 return@launch
             }
+
+            // Load logo bitmap if enabled & available
+            val logoBmp: android.graphics.Bitmap? = if (useHeaderLogo.value) {
+                val path = customLogoPath.value
+                if (!path.isNullOrBlank()) {
+                    try {
+                        val file = java.io.File(path)
+                        if (file.exists()) android.graphics.BitmapFactory.decodeFile(path) else null
+                    } catch (e: Exception) { null }
+                } else null
+            } else null
+
             val result = com.yofidewo.pos.util.EscPosPrinterHelper.printViaBluetooth(
                 deviceAddress = address,
                 transaction = transaction,
                 items = items,
                 storeName = outletName.value,
                 storeAddress = outletAddress.value,
+                storePhone = outletPhone.value,
+                receiptHeader = receiptHeader.value,
+                receiptFooter = receiptFooter.value,
                 paperWidthMm = width,
+                useAutoCutter = useAutoCutter.value,
+                useHeaderLogo = useHeaderLogo.value,
+                logoBitmap = logoBmp,
+                showAddress = showStoreAddress.value,
+                showPhone = showStorePhone.value,
+                showCashier = showCashierName.value,
+                showCustomer = showCustomerName.value,
+                showFooter = showFooterText.value,
                 formatMoney = { formatMoney(it) }
             )
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
