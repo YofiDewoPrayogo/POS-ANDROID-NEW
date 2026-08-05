@@ -1485,11 +1485,51 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Section 1: Connection & Printer
+            // Section 0: Mode Operasional Toko
+            item {
+                val currentMode by viewModel.operationalMode.collectAsState()
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Mode Operasional Toko (Retail vs F&B)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "Aplikasi menyesuaikan tampilan secara otomatis sesuai tipe bisnis Anda.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FilterChip(
+                                selected = currentMode == "RETAIL",
+                                onClick = { viewModel.setOperationalMode("RETAIL") },
+                                label = { Text("🛒 Retail / Toko", fontSize = 11.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = currentMode == "FNB",
+                                onClick = { viewModel.setOperationalMode("FNB") },
+                                label = { Text("☕ Coffee / Resto", fontSize = 11.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = currentMode == "HYBRID",
+                                onClick = { viewModel.setOperationalMode("HYBRID") },
+                                label = { Text("🔄 Hybrid All-in-1", fontSize = 11.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Section 1: Connection & Printer Kasir
             item {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Koneksi Printer Bluetooth Thermal", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text("Printer Kasir Utama (Struk Pembayaran)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             "Mendukung printer thermal ESC/POS hitam-putih ukuran 58mm (32 kolom) & 80mm (48 kolom).",
@@ -1628,6 +1668,38 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Section 1b: Multi-Printer Dapur & Bar
+            item {
+                val kitchenMac by viewModel.kitchenPrinterMac.collectAsState()
+                val barMac by viewModel.barPrinterMac.collectAsState()
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Multi-Printer (Printer Dapur & Bar F&B)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            "Otomatis memisahkan pencetakan tiket pesanan makanan ke Printer Dapur dan minuman ke Printer Bar.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedTextField(
+                            value = kitchenMac,
+                            onValueChange = { viewModel.setKitchenPrinterMac(it) },
+                            label = { Text("Printer Dapur (Kitchen - Order Makanan)") },
+                            placeholder = { Text("Alamat MAC / IP Printer Dapur") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = barMac,
+                            onValueChange = { viewModel.setBarPrinterMac(it) },
+                            label = { Text("Printer Bar (Bar - Order Minuman)") },
+                            placeholder = { Text("Alamat MAC / IP Printer Bar") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }

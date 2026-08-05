@@ -68,6 +68,24 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
 
     val selectedPrinterAddress = MutableStateFlow("")
     val selectedPrinterName = MutableStateFlow("Belum Ada Printer Dipilih")
+
+    val operationalMode = MutableStateFlow(repository.getOperationalMode())
+    fun setOperationalMode(mode: String) {
+        operationalMode.value = mode
+        repository.setOperationalMode(mode)
+    }
+
+    val kitchenPrinterMac = MutableStateFlow(repository.getKitchenPrinterMac())
+    fun setKitchenPrinterMac(mac: String) {
+        kitchenPrinterMac.value = mac
+        repository.setKitchenPrinterMac(mac)
+    }
+
+    val barPrinterMac = MutableStateFlow(repository.getBarPrinterMac())
+    fun setBarPrinterMac(mac: String) {
+        barPrinterMac.value = mac
+        repository.setBarPrinterMac(mac)
+    }
     val autoPrintReceipt = MutableStateFlow(false)
 
     fun setBluetoothPrinter(name: String, address: String) {

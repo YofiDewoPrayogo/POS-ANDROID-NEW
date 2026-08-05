@@ -25,6 +25,15 @@ class PosRepository(private val db: PosDatabase, context: Context) {
         prefs.edit().putString("firebase_url", cleanUrl).apply()
         FirebaseSyncManager.firebaseUrl = cleanUrl
     }
+
+    fun getOperationalMode(): String = prefs.getString("operational_mode", "HYBRID") ?: "HYBRID"
+    fun setOperationalMode(mode: String) = prefs.edit().putString("operational_mode", mode).apply()
+
+    fun getKitchenPrinterMac(): String = prefs.getString("kitchen_printer_mac", "") ?: ""
+    fun setKitchenPrinterMac(mac: String) = prefs.edit().putString("kitchen_printer_mac", mac).apply()
+
+    fun getBarPrinterMac(): String = prefs.getString("bar_printer_mac", "") ?: ""
+    fun setBarPrinterMac(mac: String) = prefs.edit().putString("bar_printer_mac", mac).apply()
     // Roles
     val roles: Flow<List<RoleEntity>> = db.roleDao().getAllRoles()
     suspend fun insertRole(role: RoleEntity): Long = db.roleDao().insertRole(role)
