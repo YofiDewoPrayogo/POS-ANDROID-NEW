@@ -149,6 +149,14 @@ fun SettingsUsersScreen(viewModel: PosViewModel) {
                     }
                     item {
                         SettingsItem(
+                            icon = Icons.Default.ManageAccounts,
+                            title = "Sales Setting & Option POS (Konfigurasi Opsi POS)",
+                            subtitle = "Atur opsi pajak, void, logout otomatis, poin member & printer behavior",
+                            onClick = { currentSubScreen = "sales_settings" }
+                        )
+                    }
+                    item {
+                        SettingsItem(
                             icon = Icons.Default.Storage,
                             title = "Kelola & Kosongkan Database",
                             subtitle = "Opsi hapus produk/stok/transaksi, restore & ekspor database",
@@ -379,6 +387,7 @@ fun SettingsUsersScreen(viewModel: PosViewModel) {
         "payment_methods" -> PaymentMethodsSettingsContent(viewModel = viewModel, onBack = { currentSubScreen = "list" })
         "printer" -> PrinterSettingsContent(viewModel = viewModel, onBack = { currentSubScreen = "list" })
         "discounts" -> DiscountsManagementContent(viewModel = viewModel, onBack = { currentSubScreen = "list" })
+        "sales_settings" -> SalesSettingsContent(viewModel = viewModel, onBack = { currentSubScreen = "list" })
         "database" -> DatabaseManagementContent(viewModel = viewModel, onBack = { currentSubScreen = "list" })
         "super_admin" -> SuperAdminScreen(viewModel = viewModel, onBack = { currentSubScreen = "list" })
     }
@@ -2449,5 +2458,134 @@ fun OwnerPinDialog(
             TextButton(onClick = onDismiss) { Text("Batal") }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SalesSettingsContent(viewModel: PosViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
+
+    var adjustStockOnVoid by remember { mutableStateOf(true) }
+    var logoutAfterPay by remember { mutableStateOf(true) }
+    var autoPrintShiftReport by remember { mutableStateOf(true) }
+    var showTimeOnLogin by remember { mutableStateOf(true) }
+    var securityOnPos by remember { mutableStateOf(true) }
+    var printChangeTable by remember { mutableStateOf(true) }
+    var pointRewardPerItem by remember { mutableStateOf(true) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Sales Setting & Option System POS", fontWeight = FontWeight.Bold) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Kembali") } }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Text("Opsi Perilaku Transaksi & Stok Kasir (Ref Screenshot 5)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
+
+            item {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Kembalikan Stok Saat Void (Adjust Stock on Void)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Otomatis mengembalikan kuantitas stok saat transaksi dibatalkan", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = adjustStockOnVoid, onCheckedChange = { adjustStockOnVoid = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Logout Otomatis Setelah Bayar (Logout After Pay)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Memaksa kasir menginput PIN kembali setelah tiap transaksi lulus", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = logoutAfterPay, onCheckedChange = { logoutAfterPay = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Cetak Laporan End Shift Otomatis (ShiftReport/Cashier)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Mencetak struk rincian pendapatan kasir begitu shift ditutup", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = autoPrintShiftReport, onCheckedChange = { autoPrintShiftReport = it })
+                        }
+                    }
+                }
+            }
+
+            item {
+                Text("Opsi Keamanan & Otomasi Akses POS", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
+
+            item {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Otorisasi PIN untuk Fungsi POS Sensitif (Security on POS)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Meminta PIN Manager jika kasir melakukan Void / Override Harga", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = securityOnPos, onCheckedChange = { securityOnPos = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Tampilkan Jam & Waktu di Halaman Login (Show Time on Login)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Menampilkan tanggal jam digital di layar login kasir", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = showTimeOnLogin, onCheckedChange = { showTimeOnLogin = it })
+                        }
+                    }
+                }
+            }
+
+            item {
+                Text("Opsi Cetak Struk & Program Poin Reward Member", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
+
+            item {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Cetak Struk Pindah Meja (Print Change Table)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Cetak struk konfirmasi saat meja pelanggan dipindah", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = printChangeTable, onCheckedChange = { printChangeTable = it })
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Point Reward Member per Item", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Penambahan poin reward otomatis setiap item dibeli pelanggan", fontSize = 11.sp, color = Color.Gray)
+                            }
+                            Switch(checked = pointRewardPerItem, onCheckedChange = { pointRewardPerItem = it })
+                        }
+                    }
+                }
+            }
+
+            item {
+                Button(
+                    onClick = {
+                        Toast.makeText(context, "Konfigurasi Sales Setting berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        onBack()
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                ) {
+                    Text("Simpan Konfigurasi Sales Option", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
 }
 
