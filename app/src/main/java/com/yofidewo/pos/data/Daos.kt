@@ -201,6 +201,30 @@ interface ReceivingNoteDao {
 }
 
 @Dao
+interface PurchaseReturnDao {
+    @Query("SELECT * FROM purchase_returns ORDER BY timestamp DESC")
+    fun getAllPurchaseReturns(): Flow<List<PurchaseReturnEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPurchaseReturn(ret: PurchaseReturnEntity): Long
+
+    @Query("DELETE FROM purchase_returns")
+    suspend fun deleteAllPurchaseReturns()
+}
+
+@Dao
+interface JournalEntryDao {
+    @Query("SELECT * FROM journal_entries ORDER BY timestamp DESC")
+    fun getAllJournalEntries(): Flow<List<JournalEntryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJournalEntry(entry: JournalEntryEntity): Long
+
+    @Query("DELETE FROM journal_entries")
+    suspend fun deleteAllJournalEntries()
+}
+
+@Dao
 interface CustomerDao {
     @Query("SELECT * FROM customers ORDER BY name ASC")
     fun getAllCustomers(): kotlinx.coroutines.flow.Flow<List<CustomerEntity>>

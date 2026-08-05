@@ -24,7 +24,7 @@ object FirebaseSyncManager {
 
     private var syncJob: Job? = null
     var currentOutletCode: String = ""
-        private set
+        public set
 
     fun generateOutletCode(): String {
         val randomDigits = Random.nextInt(10000, 99999)

@@ -271,9 +271,13 @@ fun AddReceivingNoteDialog(
     val context = LocalContext.current
     var selectedWarehouse by remember { mutableStateOf(warehouses.firstOrNull()) }
     var supplierName by remember { mutableStateOf("") }
-    var refNumber by remember { mutableStateOf("RN-" + System.currentTimeMillis().toString().takeLast(8)) }
+    val todayFormatted = remember { SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) }
+    var refNumber by remember { mutableStateOf("SJ-$todayFormatted-001") }
     var notes by remember { mutableStateOf("") }
     var shippingCostStr by remember { mutableStateOf("") }
+    var goodsPaymentMethod by remember { mutableStateOf("TUNAI") }
+    var shippingPaymentMethod by remember { mutableStateOf("TUNAI (COD)") }
+    var daysTempoStr by remember { mutableStateOf("30") }
 
     val rows = remember {
         mutableStateListOf(
@@ -354,27 +358,68 @@ fun AddReceivingNoteDialog(
                                         modifier = Modifier.fillMaxWidth()
                                     )
 
-                                    OutlinedTextField(
+                                     OutlinedTextField(
                                         value = refNumber,
                                         onValueChange = { refNumber = it },
-                                        label = { Text("No. Referensi / Surat Jalan") },
+                                        label = { Text("No. Referensi / Surat Jalan (e.g. SJ-20260805-001)") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
+                                    
+                                    Text("Metode Pembayaran Barang:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        listOf("TUNAI", "QRIS/TRANSFER", "HUTANG (TEMPO)").forEach { m ->
+                                            FilterChip(
+                                                selected = goodsPaymentMethod == m,
+                                                onClick = { goodsPaymentMethod = m },
+                                                label = { Text(m, fontSize = 10.sp) },
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+
+                                    if (goodsPaymentMethod.contains("HUTANG", ignoreCase = true)) {
+                                        OutlinedTextField(
+                                            value = daysTempoStr,
+                                            onValueChange = { daysTempoStr = it },
+                                            label = { Text("Jatuh Tempo Hutang Barang (Hari)") },
+                                            placeholder = { Text("30") },
+                                            singleLine = true,
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    OutlinedTextField(
+                                        value = shippingCostStr,
+                                        onValueChange = { shippingCostStr = it },
+                                        label = { Text("Biaya Ongkir Pembelian (Otomatis Masuk HPP)") },
+                                        placeholder = { Text("0") },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+
+                                    if ((shippingCostStr.toDoubleOrNull() ?: 0.0) > 0) {
+                                        Text("Metode Pembayaran Ongkir:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            listOf("TUNAI (COD)", "QRIS/TRANSFER", "HUTANG").forEach { m ->
+                                                FilterChip(
+                                                    selected = shippingPaymentMethod == m,
+                                                    onClick = { shippingPaymentMethod = m },
+                                                    label = { Text(m, fontSize = 10.sp) },
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                            }
+                                        }
+                                    }
+
                                     OutlinedTextField(
                                         value = notes,
                                         onValueChange = { notes = it },
                                         label = { Text("Catatan / Batch") },
                                         singleLine = true,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                    OutlinedTextField(
-                                        value = shippingCostStr,
-                                        onValueChange = { shippingCostStr = it },
-                                        label = { Text("Biaya Ongkir Pembelian (Masuk HPP)") },
-                                        placeholder = { Text("0") },
-                                        singleLine = true,
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -579,12 +624,22 @@ fun AddReceivingNoteDialog(
 
                                     val notesCombined = if (shippingCost > 0) "$notes (Termasuk Ongkir Rp ${shippingCost.toInt()})".trim() else notes
 
+                                    val isDebt = goodsPaymentMethod.contains("HUTANG", ignoreCase = true)
+                                    val daysTempo = daysTempoStr.toLongOrNull() ?: 30L
+                                    val calculatedDueDate = if (isDebt) System.currentTimeMillis() + (daysTempo * 24 * 3600 * 1000L) else null
+                                    val status = if (isDebt) "BELUM LUNAS" else "LUNAS"
+
                                     viewModel.addReceivingNotesBatch(
                                         supplierName = supplierName,
                                         refNumber = refNumber,
                                         warehouseId = selectedWarehouse?.id,
                                         warehouseName = selectedWarehouse?.name ?: "Gudang Utama",
                                         items = batchList,
+                                        shippingCost = shippingCost,
+                                        goodsPaymentMethod = goodsPaymentMethod,
+                                        shippingPaymentMethod = shippingPaymentMethod,
+                                        dueDate = calculatedDueDate,
+                                        paymentStatus = status,
                                         notes = notesCombined
                                     )
 

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AssignmentReturn
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Print
@@ -48,7 +49,7 @@ fun ReportsTransactionsScreen(
     var selectedSubTab by remember { mutableIntStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SecondaryTabRow(selectedTabIndex = selectedSubTab) {
+        ScrollableTabRow(selectedTabIndex = selectedSubTab, edgePadding = 12.dp) {
             Tab(
                 selected = selectedSubTab == 0,
                 onClick = { selectedSubTab = 0 },
@@ -67,6 +68,18 @@ fun ReportsTransactionsScreen(
                 text = { Text("Retur Penjualan", fontWeight = FontWeight.Bold) },
                 icon = { Icon(Icons.Default.AssignmentReturn, contentDescription = null) }
             )
+            Tab(
+                selected = selectedSubTab == 3,
+                onClick = { selectedSubTab = 3 },
+                text = { Text("Hutang Supplier & Jatuh Tempo", fontWeight = FontWeight.Bold) },
+                icon = { Icon(Icons.Default.LocalShipping, contentDescription = null) }
+            )
+            Tab(
+                selected = selectedSubTab == 4,
+                onClick = { selectedSubTab = 4 },
+                text = { Text("Jurnal Umum Akuntansi", fontWeight = FontWeight.Bold) },
+                icon = { Icon(Icons.Default.DateRange, contentDescription = null) }
+            )
         }
 
         Box(modifier = Modifier.weight(1f)) {
@@ -74,6 +87,8 @@ fun ReportsTransactionsScreen(
                 0 -> TransactionsHistoryContent(viewModel = viewModel)
                 1 -> PiutangContent(viewModel = viewModel)
                 2 -> ReturnsContent(viewModel = viewModel)
+                3 -> HutangSupplierContent(viewModel = viewModel)
+                4 -> JournalEntriesContent(viewModel = viewModel)
             }
         }
     }
@@ -1305,6 +1320,152 @@ fun DateRangePickerDialog(
                                 enabled = endState.selectedDateMillis != null
                             ) {
                                 Text("Terapkan")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HutangSupplierContent(viewModel: PosViewModel) {
+    val receivingNotes by viewModel.receivingNotes.collectAsState()
+    val debtNotes = receivingNotes.filter { it.goodsPaymentMethod.contains("HUTANG", ignoreCase = true) || it.paymentStatus == "BELUM LUNAS" }
+    val totalHutang = debtNotes.sumOf { (it.quantityReceived * it.unitCost) + it.shippingCost }
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Total Hutang Usaha Supplier (Accounts Payable)", fontSize = 13.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(viewModel.formatMoney(totalHutang), fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Daftar Tagihan & Jatuh Tempo Supplier:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (debtNotes.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Tidak ada catatan hutang supplier.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(debtNotes) { rn ->
+                    val totalTagihan = (rn.quantityReceived * rn.unitCost) + rn.shippingCost
+                    val dueDateStr = rn.dueDate?.let { dateFormatter.format(Date(it)) } ?: "Tidak Diatur"
+                    val isOverdue = rn.dueDate != null && rn.dueDate < System.currentTimeMillis()
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(rn.supplierName, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("No. Surat Jalan: ${rn.referenceNumber}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Barang: ${rn.productName} (${rn.quantityReceived} pcs)", fontSize = 12.sp)
+                                Text(
+                                    "Jatuh Tempo: $dueDateStr",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isOverdue) Color.Red else MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(viewModel.formatMoney(totalTagihan), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFFC2410C))
+                                Surface(
+                                    color = if (isOverdue) Color(0xFFFEE2E2) else Color(0xFFFFEDD5),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        if (isOverdue) "JATUH TEMPO!" else "BELUM LUNAS",
+                                        color = if (isOverdue) Color.Red else Color(0xFFC2410C),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun JournalEntriesContent(viewModel: PosViewModel) {
+    val journalEntries by viewModel.journalEntries.collectAsState()
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Jurnal Umum Akuntansi (General Journal)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Catatan Otomatis Pembukuan Debit / Kredit", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (journalEntries.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Belum ada entri jurnal akuntansi.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(journalEntries) { jrn ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("${jrn.journalNumber} • ${jrn.transactionRef}", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text(jrn.accountName, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                                Text(jrn.description, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(dateFormatter.format(Date(jrn.timestamp)), fontSize = 10.sp, color = Color.Gray)
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                if (jrn.debitAmount > 0) {
+                                    Text("Debit: ${viewModel.formatMoney(jrn.debitAmount)}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF047857))
+                                }
+                                if (jrn.creditAmount > 0) {
+                                    Text("Kredit: ${viewModel.formatMoney(jrn.creditAmount)}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFB91C1C))
+                                }
                             }
                         }
                     }

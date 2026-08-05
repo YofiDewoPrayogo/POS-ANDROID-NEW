@@ -21,10 +21,12 @@ import kotlinx.coroutines.launch
         TransactionEntity::class,
         TransactionItemEntity::class,
         ReceivingNoteEntity::class,
+        PurchaseReturnEntity::class,
+        JournalEntryEntity::class,
         CustomerEntity::class,
         DiscountEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class PosDatabase : RoomDatabase() {
@@ -39,6 +41,8 @@ abstract class PosDatabase : RoomDatabase() {
     abstract fun discountDao(): DiscountDao
     abstract fun transactionDao(): TransactionDao
     abstract fun receivingNoteDao(): ReceivingNoteDao
+    abstract fun purchaseReturnDao(): PurchaseReturnDao
+    abstract fun journalEntryDao(): JournalEntryDao
 
     companion object {
         @Volatile

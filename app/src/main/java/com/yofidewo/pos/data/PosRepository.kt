@@ -139,6 +139,23 @@ class PosRepository(private val db: PosDatabase, context: Context) {
         }
     }
 
+    // Purchase Returns
+    val purchaseReturns: Flow<List<PurchaseReturnEntity>> = db.purchaseReturnDao().getAllPurchaseReturns()
+    suspend fun addPurchaseReturn(ret: PurchaseReturnEntity) {
+        db.purchaseReturnDao().insertPurchaseReturn(ret)
+        val prod = db.productDao().getProductById(ret.productId)
+        if (prod != null) {
+            val updatedStock = (prod.stock - ret.quantityReturned).coerceAtLeast(0)
+            db.productDao().updateProduct(prod.copy(stock = updatedStock))
+        }
+    }
+
+    // Journal Entries
+    val journalEntries: Flow<List<JournalEntryEntity>> = db.journalEntryDao().getAllJournalEntries()
+    suspend fun addJournalEntry(entry: JournalEntryEntity) {
+        db.journalEntryDao().insertJournalEntry(entry)
+    }
+
     // Customers
     val customers: Flow<List<CustomerEntity>> = db.customerDao().getAllCustomers()
     suspend fun insertCustomer(customer: CustomerEntity) = db.customerDao().insertCustomer(customer)

@@ -37,6 +37,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val transactions = repository.transactions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun updateTransaction(transaction: com.yofidewo.pos.data.TransactionEntity) = viewModelScope.launch { repository.updateTransaction(transaction) }
     val receivingNotes = repository.receivingNotes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val purchaseReturns = repository.purchaseReturns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val journalEntries = repository.journalEntries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val discounts = repository.activeDiscounts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Custom Logo State
@@ -651,6 +653,56 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
             val id = repository.checkoutTransaction(transaction, itemsToProcess)
             val savedTx = transaction.copy(id = id)
 
+            // Auto Journal Entry for Sales Transaction
+            val jrnNo = "JRN-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            val paymentAcc = if (savedTx.paymentMethod.contains("Piutang", ignoreCase = true)) "Piutang Pelanggan (${savedTx.customerName})" else "Kas / Bank (${savedTx.paymentMethod})"
+            
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = savedTx.invoiceNumber,
+                    accountName = paymentAcc,
+                    debitAmount = savedTx.totalAmount,
+                    creditAmount = 0.0,
+                    description = "Penjualan Barang ${savedTx.invoiceNumber}"
+                )
+            )
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = savedTx.invoiceNumber,
+                    accountName = "Pendapatan Penjualan",
+                    debitAmount = 0.0,
+                    creditAmount = savedTx.totalAmount,
+                    description = "Kredit Pendapatan Penjualan ${savedTx.invoiceNumber}"
+                )
+            )
+
+            // HPP Journal
+            val totalHppCost = itemsToProcess.sumOf { (prod, qty) -> prod.buyPrice * qty }
+            if (totalHppCost > 0) {
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = savedTx.invoiceNumber,
+                        accountName = "HPP (Harga Pokok Penjualan)",
+                        debitAmount = totalHppCost,
+                        creditAmount = 0.0,
+                        description = "Beban HPP untuk Penjualan ${savedTx.invoiceNumber}"
+                    )
+                )
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = savedTx.invoiceNumber,
+                        accountName = "Persediaan Barang Dagang",
+                        debitAmount = 0.0,
+                        creditAmount = totalHppCost,
+                        description = "Pengurangan Persediaan Barang untuk ${savedTx.invoiceNumber}"
+                    )
+                )
+            }
+
             repository.incrementTransactionCount()
             // Ensure FirebaseSyncManager knows which outlet we are processing
             com.yofidewo.pos.data.FirebaseSyncManager.currentOutletCode = outletCode.value
@@ -786,13 +838,22 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
         warehouseId: Long?,
         warehouseName: String,
         items: List<Pair<ProductEntity, Pair<Int, Double>>>, // product to (qty, cost)
+        shippingCost: Double = 0.0,
+        goodsPaymentMethod: String = "TUNAI",
+        shippingPaymentMethod: String = "TUNAI (COD)",
+        dueDate: Long? = null,
+        paymentStatus: String = "LUNAS",
         notes: String
     ) {
         viewModelScope.launch {
-            val actualRef = if (refNumber.isNotBlank()) refNumber else "RN-" + System.currentTimeMillis().toString().takeLast(8)
+            val actualRef = if (refNumber.isNotBlank()) refNumber else "SJ-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            var totalGoodsCost = 0.0
+            
             items.forEach { (prod, qtyAndCost) ->
                 val (qty, cost) = qtyAndCost
                 if (qty > 0) {
+                    val subtotal = qty * cost
+                    totalGoodsCost += subtotal
                     val note = ReceivingNoteEntity(
                         referenceNumber = actualRef,
                         supplierName = supplierName,
@@ -802,11 +863,130 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                         warehouseName = warehouseName,
                         quantityReceived = qty,
                         unitCost = cost,
+                        shippingCost = shippingCost,
+                        goodsPaymentMethod = goodsPaymentMethod,
+                        shippingPaymentMethod = shippingPaymentMethod,
+                        dueDate = dueDate,
+                        paymentStatus = paymentStatus,
                         notes = notes
                     )
                     repository.addReceivingNote(note)
                 }
             }
+
+            // Auto Journal Entry for Goods Receipt & Shipping
+            val jrnNo = "JRN-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            
+            // Debit Persediaan Barang
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = actualRef,
+                    accountName = "Persediaan Barang Dagang",
+                    debitAmount = totalGoodsCost,
+                    creditAmount = 0.0,
+                    description = "Penerimaan Stok Barang $actualRef dari $supplierName"
+                )
+            )
+
+            // Credit Kas / Hutang Supplier for Goods
+            if (goodsPaymentMethod.contains("HUTANG", ignoreCase = true)) {
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = actualRef,
+                        accountName = "Hutang Usaha Supplier ($supplierName)",
+                        debitAmount = 0.0,
+                        creditAmount = totalGoodsCost,
+                        description = "Hutang Pembelian Barang $actualRef Tempo"
+                    )
+                )
+            } else {
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = actualRef,
+                        accountName = "Kas / Bank ($goodsPaymentMethod)",
+                        debitAmount = 0.0,
+                        creditAmount = totalGoodsCost,
+                        description = "Pembayaran Tunai Barang $actualRef ke $supplierName"
+                    )
+                )
+            }
+
+            // Ongkir Journal Entry
+            if (shippingCost > 0) {
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = actualRef,
+                        accountName = "Beban Ongkir Pembelian (Freights)",
+                        debitAmount = shippingCost,
+                        creditAmount = 0.0,
+                        description = "Biaya Ongkir / Ekspedisi $actualRef ($shippingPaymentMethod)"
+                    )
+                )
+                repository.addJournalEntry(
+                    JournalEntryEntity(
+                        journalNumber = jrnNo,
+                        transactionRef = actualRef,
+                        accountName = if (shippingPaymentMethod.contains("HUTANG", ignoreCase = true)) "Hutang Ongkir Ekspedisi" else "Kas / Bank ($shippingPaymentMethod)",
+                        debitAmount = 0.0,
+                        creditAmount = shippingCost,
+                        description = "Kredit Pembayaran Ongkir Pembelian $actualRef"
+                    )
+                )
+            }
+        }
+    }
+
+    fun addPurchaseReturn(
+        referenceNumber: String,
+        supplierName: String,
+        productId: Long,
+        productName: String,
+        quantityReturned: Int,
+        unitCost: Double,
+        reason: String
+    ) {
+        viewModelScope.launch {
+            val totalAmount = quantityReturned * unitCost
+            val retNo = "RET-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            val ret = PurchaseReturnEntity(
+                returnNumber = retNo,
+                referenceNumber = referenceNumber,
+                supplierName = supplierName,
+                productId = productId,
+                productName = productName,
+                quantityReturned = quantityReturned,
+                unitCost = unitCost,
+                totalAmount = totalAmount,
+                reason = reason
+            )
+            repository.addPurchaseReturn(ret)
+
+            // Auto Journal Entry for Retur Pembelian
+            val jrnNo = "JRN-" + SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date()) + "-" + (100..999).random()
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = retNo,
+                    accountName = "Hutang Supplier / Kas Ref",
+                    debitAmount = totalAmount,
+                    creditAmount = 0.0,
+                    description = "Retur Pembelian $productName ($quantityReturned pcs) ke $supplierName"
+                )
+            )
+            repository.addJournalEntry(
+                JournalEntryEntity(
+                    journalNumber = jrnNo,
+                    transactionRef = retNo,
+                    accountName = "Persediaan Barang Dagang",
+                    debitAmount = 0.0,
+                    creditAmount = totalAmount,
+                    description = "Pengurangan Persediaan akibat Retur Pembelian $productName"
+                )
+            )
         }
     }
 

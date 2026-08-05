@@ -170,7 +170,39 @@ data class ReceivingNoteEntity(
     val warehouseName: String = "Main Warehouse",
     val quantityReceived: Int,
     val unitCost: Double,
+    val shippingCost: Double = 0.0,
+    val goodsPaymentMethod: String = "TUNAI", // TUNAI, QRIS/TRANSFER, HUTANG (TEMPO)
+    val shippingPaymentMethod: String = "TUNAI (COD)", // TUNAI (COD), QRIS/TRANSFER, HUTANG (TEMPO)
+    val dueDate: Long? = null,
+    val paymentStatus: String = "LUNAS", // LUNAS, BELUM LUNAS
     val notes: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "purchase_returns")
+data class PurchaseReturnEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val returnNumber: String,
+    val referenceNumber: String,
+    val supplierName: String,
+    val productId: Long,
+    val productName: String,
+    val quantityReturned: Int,
+    val unitCost: Double,
+    val totalAmount: Double,
+    val reason: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "journal_entries")
+data class JournalEntryEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val journalNumber: String,
+    val transactionRef: String = "",
+    val accountName: String,
+    val debitAmount: Double = 0.0,
+    val creditAmount: Double = 0.0,
+    val description: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )
 
