@@ -29,9 +29,9 @@ object EscPosPrinterHelper {
     private val ESC_DOUBLE_HEIGHT_OFF = byteArrayOf(0x1B, 0x21, 0x00)
     private val ESC_KICK_DRAWER = byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte())
 
-    // ESC/POS Auto-Cutter Command (GS V 66 0)
-    private val ESC_FEED_PAPER = "\n\n\n".toByteArray()
-    private val CUT_GS_V_66 = byteArrayOf(0x1D, 0x56, 0x42, 0x00) // GS V 66 0
+    // ESC/POS Auto-Cutter Command with 5-line hardware feed margin
+    private val ESC_FEED_PAPER = byteArrayOf(0x1B, 0x64, 0x05)   // ESC d 5 (Feed 5 lines for cutter distance)
+    private val CUT_GS_V_66 = byteArrayOf(0x1D, 0x56, 0x42, 0x00) // GS V 66 0 (Cut paper)
 
     private fun writeAutoCutter(outputStream: OutputStream) {
         outputStream.write(ESC_FEED_PAPER)
