@@ -23,7 +23,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.yofidewo.pos.data.TransactionEntity
 import com.yofidewo.pos.data.TransactionItemEntity
 import com.yofidewo.pos.ui.PosViewModel
@@ -112,15 +115,22 @@ fun InvoiceDialog(
         context.startActivity(Intent.createChooser(shareIntent, "Bagikan Struk Nota"))
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .padding(vertical = 16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp)
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -144,7 +154,7 @@ fun InvoiceDialog(
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Tutup")
                     }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Box(
                     modifier = Modifier
@@ -158,7 +168,7 @@ fun InvoiceDialog(
                             text = transaction.invoiceNumber,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace,
-                            fontSize = 16.sp,
+                            fontSize = 15.sp,
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -169,20 +179,18 @@ fun InvoiceDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Daftar Belanja",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(items) { item ->
+                    items.forEach { item ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -211,7 +219,7 @@ fun InvoiceDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Column(
                     modifier = Modifier
@@ -224,11 +232,11 @@ fun InvoiceDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Total:", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(text = "Total:", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         Text(
                             text = viewModel.formatMoney(transaction.totalAmount),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = 17.sp,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -237,27 +245,27 @@ fun InvoiceDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Jumlah Dibayar:", fontSize = 13.sp)
+                        Text(text = "Jumlah Dibayar:", fontSize = 12.sp)
                         Text(
                             text = viewModel.formatMoney(transaction.paidAmount),
-                            fontSize = 13.sp
+                            fontSize = 12.sp
                         )
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Kembalian:", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(text = "Kembalian:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Text(
                             text = viewModel.formatMoney(transaction.changeAmount),
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
@@ -290,10 +298,10 @@ fun InvoiceDialog(
 
                     Button(
                         onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(44.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
-                        Text("Selesai (Tutup)")
+                        Text("Selesai (Tutup)", fontWeight = FontWeight.Bold)
                     }
                 }
             }
