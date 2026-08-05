@@ -1445,6 +1445,23 @@ fun JournalEntriesContent(viewModel: PosViewModel) {
     val journalEntries by viewModel.journalEntries.collectAsState()
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
 
+    // Saldo Akun Real-Time dari Jurnal
+    val kasTunaiDebit = journalEntries.filter { (it.accountName.contains("Kas", ignoreCase = true) || it.accountName.contains("Tunai", ignoreCase = true)) && !it.accountName.contains("Bank", ignoreCase = true) }.sumOf { it.debitAmount }
+    val kasTunaiKredit = journalEntries.filter { (it.accountName.contains("Kas", ignoreCase = true) || it.accountName.contains("Tunai", ignoreCase = true)) && !it.accountName.contains("Bank", ignoreCase = true) }.sumOf { it.creditAmount }
+    val saldoKasTunai = kasTunaiDebit - kasTunaiKredit
+
+    val bankDebit = journalEntries.filter { it.accountName.contains("Bank", ignoreCase = true) || it.accountName.contains("QRIS", ignoreCase = true) || it.accountName.contains("Transfer", ignoreCase = true) }.sumOf { it.debitAmount }
+    val bankKredit = journalEntries.filter { it.accountName.contains("Bank", ignoreCase = true) || it.accountName.contains("QRIS", ignoreCase = true) || it.accountName.contains("Transfer", ignoreCase = true) }.sumOf { it.creditAmount }
+    val saldoBank = bankDebit - bankKredit
+
+    val persediaanDebit = journalEntries.filter { it.accountName.contains("Persediaan", ignoreCase = true) }.sumOf { it.debitAmount }
+    val persediaanKredit = journalEntries.filter { it.accountName.contains("Persediaan", ignoreCase = true) }.sumOf { it.creditAmount }
+    val saldoPersediaan = persediaanDebit - persediaanKredit
+
+    val hutangKredit = journalEntries.filter { it.accountName.contains("Hutang", ignoreCase = true) }.sumOf { it.creditAmount }
+    val hutangDebit = journalEntries.filter { it.accountName.contains("Hutang", ignoreCase = true) }.sumOf { it.debitAmount }
+    val saldoHutang = hutangKredit - hutangDebit
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1457,7 +1474,67 @@ fun JournalEntriesContent(viewModel: PosViewModel) {
         ) {
             Column {
                 Text("Jurnal Umum Akuntansi (General Journal)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Catatan Otomatis Pembukuan Debit / Kredit", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Catatan Otomatis Pembukuan Debit / Kredit & Saldo Akun Real-Time", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Card Summary Saldo Akun
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Buku Besar Summary Saldo Akun Real-Time", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("💵 Saldo Kas Tunai", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatMoney(saldoKasTunai), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (saldoKasTunai >= 0) Color(0xFF2E7D32) else Color(0xFFC62828))
+                        }
+                    }
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("🏦 Saldo Rekening / Bank", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatMoney(saldoBank), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = if (saldoBank >= 0) Color(0xFF1565C0) else Color(0xFFC62828))
+                        }
+                    }
+                }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("📦 Nilai Aset Stok Persediaan", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatMoney(saldoPersediaan), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("📝 Total Liabilitas Hutang", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatMoney(saldoHutang), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFE65100))
+                        }
+                    }
+                }
             }
         }
 
