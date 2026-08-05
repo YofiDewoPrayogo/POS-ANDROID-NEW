@@ -273,6 +273,7 @@ fun AddReceivingNoteDialog(
     var supplierName by remember { mutableStateOf("") }
     var refNumber by remember { mutableStateOf("RN-" + System.currentTimeMillis().toString().takeLast(8)) }
     var notes by remember { mutableStateOf("") }
+    var shippingCostStr by remember { mutableStateOf("") }
 
     val rows = remember {
         mutableStateListOf(
@@ -365,6 +366,15 @@ fun AddReceivingNoteDialog(
                                         onValueChange = { notes = it },
                                         label = { Text("Catatan / Batch") },
                                         singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    OutlinedTextField(
+                                        value = shippingCostStr,
+                                        onValueChange = { shippingCostStr = it },
+                                        label = { Text("Biaya Ongkir Pembelian (Masuk HPP)") },
+                                        placeholder = { Text("0") },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -551,16 +561,23 @@ fun AddReceivingNoteDialog(
                                         Toast.makeText(context, "Masukkan nama pemasok/supplier", Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
+                                     val totalQtySum = rows.sumOf { it.qtyStr.toIntOrNull() ?: 0 }
+                                    val shippingCost = shippingCostStr.toDoubleOrNull() ?: 0.0
+                                    val extraCostPerUnit = if (totalQtySum > 0 && shippingCost > 0) (shippingCost / totalQtySum) else 0.0
+
                                     val batchList = rows.mapNotNull { row ->
                                         val prod = row.selectedProduct ?: return@mapNotNull null
                                         val q = row.qtyStr.toIntOrNull() ?: 0
-                                        val c = row.costStr.toDoubleOrNull() ?: 0.0
-                                        if (q > 0) Pair(prod, Pair(q, c)) else null
+                                        val baseCost = row.costStr.toDoubleOrNull() ?: 0.0
+                                        val totalUnitHpp = baseCost + extraCostPerUnit
+                                        if (q > 0) Pair(prod, Pair(q, totalUnitHpp)) else null
                                     }
                                     if (batchList.isEmpty()) {
                                         Toast.makeText(context, "Pilih minimal 1 produk dengan jumlah > 0", Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
+
+                                    val notesCombined = if (shippingCost > 0) "$notes (Termasuk Ongkir Rp ${shippingCost.toInt()})".trim() else notes
 
                                     viewModel.addReceivingNotesBatch(
                                         supplierName = supplierName,
@@ -568,10 +585,10 @@ fun AddReceivingNoteDialog(
                                         warehouseId = selectedWarehouse?.id,
                                         warehouseName = selectedWarehouse?.name ?: "Gudang Utama",
                                         items = batchList,
-                                        notes = notes
+                                        notes = notesCombined
                                     )
 
-                                    Toast.makeText(context, "Berhasil menambah stok untuk ${batchList.size} item!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Berhasil menambah stok & alokasi HPP untuk ${batchList.size} item!", Toast.LENGTH_SHORT).show()
                                     onDismiss()
                                 },
                                 modifier = Modifier.weight(1.2f),
