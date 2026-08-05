@@ -469,7 +469,8 @@ fun ProductFormDialog(
                         OutlinedTextField(
                             value = buyPriceStr,
                             onValueChange = { buyPriceStr = it },
-                            label = { Text("Harga Beli") },
+                            label = { Text("Harga Beli / Modal") },
+                            supportingText = { Text("Otomatis (Modal + Ongkir)", fontSize = 10.sp, color = MaterialTheme.colorScheme.primary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.weight(1f)

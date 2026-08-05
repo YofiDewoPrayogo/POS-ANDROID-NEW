@@ -932,7 +932,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                     accountName = "Persediaan Barang Dagang",
                     debitAmount = totalGoodsCost,
                     creditAmount = 0.0,
-                    description = "Penerimaan Stok Barang $actualRef dari $supplierName"
+                    description = "Penerimaan Stok Barang $actualRef dari $supplierName",
+                    timestamp = invoiceDate
                 )
             )
 
@@ -945,7 +946,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                         accountName = "Hutang Usaha Supplier ($supplierName)",
                         debitAmount = 0.0,
                         creditAmount = totalGoodsCost,
-                        description = "Hutang Pembelian Barang $actualRef Tempo"
+                        description = "Hutang Pembelian Barang $actualRef Tempo",
+                        timestamp = invoiceDate
                     )
                 )
             } else {
@@ -956,7 +958,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                         accountName = "Kas / Bank ($goodsPaymentMethod)",
                         debitAmount = 0.0,
                         creditAmount = totalGoodsCost,
-                        description = "Pembayaran Tunai Barang $actualRef ke $supplierName"
+                        description = "Pembayaran Tunai Barang $actualRef ke $supplierName",
+                        timestamp = invoiceDate
                     )
                 )
             }
@@ -970,7 +973,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                         accountName = "Beban Ongkir Pembelian (Freights)",
                         debitAmount = shippingCost,
                         creditAmount = 0.0,
-                        description = "Biaya Ongkir / Ekspedisi $actualRef ($shippingPaymentMethod)"
+                        description = "Biaya Ongkir / Ekspedisi $actualRef ($shippingPaymentMethod)",
+                        timestamp = invoiceDate
                     )
                 )
                 repository.addJournalEntry(
@@ -980,7 +984,8 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                         accountName = if (shippingPaymentMethod.contains("HUTANG", ignoreCase = true)) "Hutang Ongkir Ekspedisi" else "Kas / Bank ($shippingPaymentMethod)",
                         debitAmount = 0.0,
                         creditAmount = shippingCost,
-                        description = "Kredit Pembayaran Ongkir Pembelian $actualRef"
+                        description = "Kredit Pembayaran Ongkir Pembelian $actualRef",
+                        timestamp = invoiceDate
                     )
                 )
             }
