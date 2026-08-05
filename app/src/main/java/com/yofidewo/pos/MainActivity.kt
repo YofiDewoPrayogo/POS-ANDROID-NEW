@@ -82,13 +82,12 @@ fun MainAppLayout(viewModel: PosViewModel) {
     val isActivated by viewModel.isActivated.collectAsState()
     val customLogoBitmap by viewModel.customLogoBitmap.collectAsState()
 
-    val showHeader = currentRoute == Screen.Dashboard.route || currentRoute == Screen.Settings.route
+    val showHeader = currentRoute != Screen.SuperAdmin.route
 
     val navItems = buildList {
-        if (currentRole?.name == "Administrator") {
-            add(NavItem(Screen.Dashboard, Icons.Default.Dashboard))
-        }
         add(NavItem(Screen.CashierPos, Icons.Default.PointOfSale))
+        add(NavItem(Screen.TableLayout, Icons.Default.Dashboard))
+        add(NavItem(Screen.KitchenDisplay, Icons.Default.Receipt))
         if (currentRole?.canViewProducts == true || currentRole?.name == "Administrator") {
             add(NavItem(Screen.Products, Icons.Default.Inventory))
         }
@@ -240,7 +239,7 @@ fun MainAppLayout(viewModel: PosViewModel) {
                 startDestination = Screen.CashierPos.route
             ) {
                 composable(Screen.CashierPos.route) {
-                    CashierPosScreen(viewModel = viewModel)
+                    CashierPosScreen(viewModel = viewModel, onNavigate = { route -> navController.navigate(route) })
                 }
                 composable(Screen.Products.route) {
                     ProductsScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
@@ -282,6 +281,9 @@ fun MainAppLayout(viewModel: PosViewModel) {
                 }
                 composable(Screen.TableLayout.route) {
                     TableLayoutScreen(viewModel = viewModel)
+                }
+                composable(Screen.KitchenDisplay.route) {
+                    KitchenDisplayScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
                 }
             }
         }

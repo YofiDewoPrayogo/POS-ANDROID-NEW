@@ -15,6 +15,7 @@ sealed class Screen(val route: String, val title: String) {
     object OutletSetup : Screen("outlet_setup", "Setup Outlet")
     object SuperAdmin : Screen("super_admin", "Super Admin")
     object TableLayout : Screen("table_layout", "Denah Meja F&B")
+    object KitchenDisplay : Screen("kitchen_display", "Layar Dapur")
 }
 
 

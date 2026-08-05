@@ -52,7 +52,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CashierPosScreen(viewModel: PosViewModel) {
+fun CashierPosScreen(viewModel: PosViewModel, onNavigate: (String) -> Unit = {}) {
     val context = LocalContext.current
     val products by viewModel.products.collectAsState()
     val categories by viewModel.categories.collectAsState()
@@ -201,7 +201,34 @@ fun CashierPosScreen(viewModel: PosViewModel) {
                         onSelectCurrency = { viewModel.selectCurrency(it) },
                         currentUser = currentUser
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Quick F&B Action Row (Layar Dapur & Denah Meja)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = { onNavigate(com.yofidewo.pos.ui.navigation.Screen.KitchenDisplay.route) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("🖥️ Layar Dapur KDS", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = { onNavigate(com.yofidewo.pos.ui.navigation.Screen.TableLayout.route) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("🛋️ Denah & Buka Meja", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                     CategoryFilters(
                         categories = categories,
                         selectedCategoryId = selectedCategoryId,
