@@ -1563,67 +1563,65 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                                 Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Buka Pengaturan Bluetooth HP (Pairing Printer Baru)", fontSize = 12.sp)
+                            }
 
-                                if (isSearching || selectedPrinterAddress.isBlank()) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    val pairedList = remember(refreshKey) {
-                                        try {
-                                            EscPosPrinterHelper.getPairedDevices()
-                                        } catch (e: SecurityException) {
-                                            emptyList()
-                                        }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val pairedList = remember(refreshKey) {
+                                try {
+                                    EscPosPrinterHelper.getPairedDevices()
+                                } catch (e: SecurityException) {
+                                    emptyList()
+                                }
+                            }
+
+                            Text("Pilih Printer Bluetooth Terpasang:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            if (pairedList.isEmpty()) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            "Belum ada printer Bluetooth terdeteksi/terhubung.",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "1. Pastikan Bluetooth HP & Printer Thermal Anda sudah NYALA.\n2. Buka Pengaturan Bluetooth HP untuk Pairing.\n3. Tekan Pindai/Refresh di atas.",
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
-
-                                    Text("Pilih Printer Bluetooth Terpasang:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                    Spacer(modifier = Modifier.height(6.dp))
-
-                                    if (pairedList.isEmpty()) {
+                                }
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    pairedList.forEach { dev ->
+                                        val isSelected = dev.address == selectedPrinterAddress
                                         Card(
+                                            onClick = {
+                                                viewModel.setBluetoothPrinter(dev.name, dev.address)
+                                                Toast.makeText(context, "Printer ${dev.name} dipilih!", Toast.LENGTH_SHORT).show()
+                                            },
                                             modifier = Modifier.fillMaxWidth(),
-                                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                                            ),
+                                            border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
                                         ) {
-                                            Column(modifier = Modifier.padding(12.dp)) {
-                                                Text(
-                                                    "Belum ada printer Bluetooth terdeteksi/terhubung.",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 12.sp,
-                                                    color = MaterialTheme.colorScheme.error
-                                                )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    "1. Pastikan Bluetooth HP & Printer Thermal Anda sudah NYALA.\n2. Buka Pengaturan Bluetooth HP untuk Pairing.\n3. Tekan Refresh di atas.",
-                                                    fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    } else {
-                                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            pairedList.forEach { dev ->
-                                                val isSelected = dev.address == selectedPrinterAddress
-                                                Card(
-                                                    onClick = {
-                                                        viewModel.setBluetoothPrinter(dev.name, dev.address)
-                                                        Toast.makeText(context, "Printer ${dev.name} dipilih!", Toast.LENGTH_SHORT).show()
-                                                    },
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    colors = CardDefaults.cardColors(
-                                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                                                    ),
-                                                    border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
-                                                ) {
-                                                    Row(
-                                                        modifier = Modifier.padding(12.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Column(modifier = Modifier.weight(1f)) {
-                                                            Text(dev.name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                                            Text(dev.address, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                        }
-                                                        Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                                    }
+                                            Row(
+                                                modifier = Modifier.padding(12.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(dev.name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                                    Text(dev.address, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                 }
+                                                Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                             }
                                         }
                                     }
