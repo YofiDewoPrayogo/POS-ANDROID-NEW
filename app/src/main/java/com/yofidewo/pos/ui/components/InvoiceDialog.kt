@@ -1,5 +1,6 @@
 package com.yofidewo.pos.ui.components
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +27,7 @@ import androidx.compose.ui.window.Dialog
 import com.yofidewo.pos.data.TransactionEntity
 import com.yofidewo.pos.data.TransactionItemEntity
 import com.yofidewo.pos.ui.PosViewModel
+import com.yofidewo.pos.util.EscPosPrinterHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,21 +40,77 @@ fun InvoiceDialog(
 ) {
     val context = LocalContext.current
     var items by remember { mutableStateOf<List<TransactionItemEntity>>(emptyList()) }
+    val selectedPrinterAddress by viewModel.selectedPrinterAddress.collectAsState()
+    val selectedPrinterName by viewModel.selectedPrinterName.collectAsState()
+    val paperWidth by viewModel.paperWidth.collectAsState()
+    var isPrinting by remember { mutableStateOf(false) }
+    var autoPrinted by remember { mutableStateOf(false) }
 
     LaunchedEffect(transaction.id) {
-        // Not ideal to access repo directly, but fine for this scope
-        // Alternatively, add a method to ViewModel that handles this
-        // viewModel.getItemsForTransaction(transaction.id)
-        
-        // Simulating the fetch for now as it was doing it directly before
-        // This is assuming `viewModel.repository.getItemsForTransactionSync` was available.
-        // Let's use a workaround if it isn't, but the original code had it.
-        // If compilation fails later, we will adjust this.
         items = viewModel.repository.getItemsForTransactionSync(transaction.id)
+    }
+
+    // Auto print when items loaded if printer is configured
+    LaunchedEffect(items, selectedPrinterAddress) {
+        if (!autoPrinted && items.isNotEmpty() && selectedPrinterAddress.isNotBlank()) {
+            autoPrinted = true
+            isPrinting = true
+            viewModel.printReceiptBluetooth(
+                context = context,
+                transaction = transaction,
+                items = items,
+                onSuccess = {
+                    isPrinting = false
+                    Toast.makeText(context, "Struk berhasil dicetak!", Toast.LENGTH_SHORT).show()
+                },
+                onError = { err ->
+                    isPrinting = false
+                    Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
     }
 
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
     val formattedDate = dateFormatter.format(Date(transaction.timestamp))
+
+    val doPrintBluetooth = {
+        if (selectedPrinterAddress.isBlank()) {
+            Toast.makeText(context, "Pilih printer Bluetooth di Pengaturan terlebih dahulu!", Toast.LENGTH_LONG).show()
+        } else {
+            isPrinting = true
+            viewModel.printReceiptBluetooth(
+                context = context,
+                transaction = transaction,
+                items = items,
+                onSuccess = {
+                    isPrinting = false
+                    Toast.makeText(context, "Struk berhasil dicetak ke $selectedPrinterName!", Toast.LENGTH_SHORT).show()
+                },
+                onError = { err ->
+                    isPrinting = false
+                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                }
+            )
+        }
+    }
+
+    val doShareText = {
+        val widthMm = if (paperWidth.contains("80")) 80 else 58
+        val textReceipt = EscPosPrinterHelper.buildTextReceipt(
+            transaction = transaction,
+            items = items,
+            storeName = viewModel.outletName.value,
+            storeAddress = viewModel.outletAddress.value,
+            paperWidthMm = widthMm,
+            formatMoney = { viewModel.formatMoney(it) }
+        )
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, textReceipt)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Bagikan Struk Nota"))
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -148,7 +207,7 @@ fun InvoiceDialog(
                                 fontSize = 13.sp
                             )
                         }
-                        Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     }
                 }
 
@@ -200,25 +259,41 @@ fun InvoiceDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            Toast.makeText(context, "Mencetak Struk...", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.weight(1f)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Print, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Cetak / PDF", fontSize = 12.sp)
+                        Button(
+                            onClick = { doPrintBluetooth() },
+                            enabled = !isPrinting,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (isPrinting) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                            } else {
+                                Icon(imageVector = Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Cetak Thermal", fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = { doShareText() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Bagikan Struk", fontSize = 12.sp)
+                        }
                     }
+
                     Button(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
-                        Text("Selesai")
+                        Text("Selesai (Tutup)")
                     }
                 }
             }
