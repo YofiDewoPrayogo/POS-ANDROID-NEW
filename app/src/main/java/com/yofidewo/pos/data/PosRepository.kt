@@ -165,6 +165,22 @@ class PosRepository(private val db: PosDatabase, context: Context) {
         db.journalEntryDao().insertJournalEntry(entry)
     }
 
+    // Cashier Shifts
+    val shifts: Flow<List<CashierShiftEntity>> = db.cashierShiftDao().getAllShifts()
+    suspend fun getActiveShift(): CashierShiftEntity? = db.cashierShiftDao().getActiveShift()
+    suspend fun openShift(userId: Long, cashierName: String, startingCash: Double): Long {
+        val shift = CashierShiftEntity(
+            userId = userId,
+            cashierName = cashierName,
+            startingCash = startingCash,
+            status = "OPEN"
+        )
+        return db.cashierShiftDao().insertShift(shift)
+    }
+    suspend fun closeShift(shift: CashierShiftEntity) {
+        db.cashierShiftDao().updateShift(shift)
+    }
+
     // Customers
     val customers: Flow<List<CustomerEntity>> = db.customerDao().getAllCustomers()
     suspend fun insertCustomer(customer: CustomerEntity) = db.customerDao().insertCustomer(customer)

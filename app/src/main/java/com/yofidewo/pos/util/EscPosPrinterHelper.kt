@@ -617,4 +617,70 @@ object EscPosPrinterHelper {
             Result.failure(e)
         }
     }
+
+    @SuppressLint("MissingPermission")
+    fun printShiftReportBluetooth(
+        deviceAddress: String,
+        storeName: String,
+        shift: com.yofidewo.pos.data.CashierShiftEntity,
+        paperWidth: String = "80mm"
+    ): Result<Boolean> {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            ?: return Result.failure(Exception("Bluetooth tidak didukung"))
+        if (!bluetoothAdapter.isEnabled) {
+            return Result.failure(Exception("Bluetooth belum aktif"))
+        }
+
+        var socket: BluetoothSocket? = null
+        return try {
+            val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+            bluetoothAdapter.cancelDiscovery()
+            socket.connect()
+
+            val out = socket.outputStream
+            out.write(ESC_INIT)
+
+            val width = if (paperWidth == "58mm") 32 else 48
+            val lineSeparator = "-".repeat(width)
+            val dateFormatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
+            out.write(ESC_ALIGN_CENTER)
+            out.write(ESC_BOLD_ON)
+            out.write("${storeName.uppercase()}\n".toByteArray())
+            out.write("LAPORAN CLOSING SHIFT KASIR\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            out.write("$lineSeparator\n".toByteArray())
+
+            out.write(ESC_ALIGN_LEFT)
+            out.write("Kasir       : ${shift.cashierName}\n".toByteArray())
+            out.write("Buka Shift  : ${dateFormatter.format(Date(shift.startTime))}\n".toByteArray())
+            val endTimeStr = shift.endTime?.let { dateFormatter.format(Date(it)) } ?: "-"
+            out.write("Tutup Shift : $endTimeStr\n".toByteArray())
+            out.write("$lineSeparator\n".toByteArray())
+
+            out.write(ESC_BOLD_ON)
+            out.write("Modal Awal Kas    : Rp ${shift.startingCash.toInt()}\n".toByteArray())
+            out.write("Penjualan Tunai   : Rp ${shift.totalCashSales.toInt()}\n".toByteArray())
+            out.write("Penjualan Non-Tunai: Rp ${shift.totalNonCashSales.toInt()}\n".toByteArray())
+            out.write("$lineSeparator\n".toByteArray())
+            out.write("Uang Kas Seharusnya: Rp ${shift.expectedCashInDrawer.toInt()}\n".toByteArray())
+            out.write("Uang Fisik Dihitung: Rp ${shift.actualCashInDrawer.toInt()}\n".toByteArray())
+            out.write("Selisih Kas        : Rp ${shift.cashDifference.toInt()}\n".toByteArray())
+            out.write(ESC_BOLD_OFF)
+            out.write("$lineSeparator\n".toByteArray())
+
+            out.write(ESC_ALIGN_CENTER)
+            out.write("Status: ${shift.status} (End Shift Completed)\n\n\n".toByteArray())
+
+            writeAutoCutter(out)
+            out.flush()
+            out.close()
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        } finally {
+            try { socket?.close() } catch (_: Exception) {}
+        }
+    }
 }

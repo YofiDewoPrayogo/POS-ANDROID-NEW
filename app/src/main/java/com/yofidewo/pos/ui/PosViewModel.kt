@@ -39,6 +39,9 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
     val receivingNotes = repository.receivingNotes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val purchaseReturns = repository.purchaseReturns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val journalEntries = repository.journalEntries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val shifts = repository.shifts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val activeShift = MutableStateFlow<CashierShiftEntity?>(null)
+
     val discounts = repository.activeDiscounts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Custom Logo State
@@ -1005,6 +1008,40 @@ class PosViewModel(val repository: PosRepository) : ViewModel() {
                     description = "Pengurangan Persediaan akibat Retur Pembelian $productName"
                 )
             )
+        }
+    }
+
+    fun openCashierShift(userId: Long, cashierName: String, startingCash: Double) {
+        viewModelScope.launch {
+            repository.openShift(userId, cashierName, startingCash)
+            activeShift.value = repository.getActiveShift()
+        }
+    }
+
+    fun closeCashierShift(actualCash: Double, notes: String = "", onDone: (CashierShiftEntity) -> Unit) {
+        viewModelScope.launch {
+            val current = repository.getActiveShift() ?: return@launch
+            val currentTxs = transactions.value.filter { it.timestamp >= current.startTime && it.cashierName == current.cashierName }
+            val cashSales = currentTxs.filter { it.paymentMethod.contains("Cash", ignoreCase = true) || it.paymentMethod.contains("Tunai", ignoreCase = true) }.sumOf { it.totalAmount }
+            val nonCashSales = currentTxs.filter { !it.paymentMethod.contains("Cash", ignoreCase = true) && !it.paymentMethod.contains("Tunai", ignoreCase = true) }.sumOf { it.totalAmount }
+            
+            val expected = current.startingCash + cashSales
+            val diff = actualCash - expected
+            
+            val closed = current.copy(
+                endTime = System.currentTimeMillis(),
+                totalCashSales = cashSales,
+                totalNonCashSales = nonCashSales,
+                expectedCashInDrawer = expected,
+                actualCashInDrawer = actualCash,
+                cashDifference = diff,
+                notes = notes,
+                status = "CLOSED"
+            )
+            
+            repository.closeShift(closed)
+            activeShift.value = null
+            onDone(closed)
         }
     }
 

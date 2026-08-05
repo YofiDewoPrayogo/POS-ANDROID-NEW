@@ -225,6 +225,21 @@ interface JournalEntryDao {
 }
 
 @Dao
+interface CashierShiftDao {
+    @Query("SELECT * FROM cashier_shifts ORDER BY startTime DESC")
+    fun getAllShifts(): Flow<List<CashierShiftEntity>>
+
+    @Query("SELECT * FROM cashier_shifts WHERE status = 'OPEN' ORDER BY startTime DESC LIMIT 1")
+    suspend fun getActiveShift(): CashierShiftEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertShift(shift: CashierShiftEntity): Long
+
+    @Update
+    suspend fun updateShift(shift: CashierShiftEntity)
+}
+
+@Dao
 interface CustomerDao {
     @Query("SELECT * FROM customers ORDER BY name ASC")
     fun getAllCustomers(): kotlinx.coroutines.flow.Flow<List<CustomerEntity>>

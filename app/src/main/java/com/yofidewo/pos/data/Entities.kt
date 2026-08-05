@@ -41,7 +41,8 @@ data class CategoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val code: String = "",
-    val description: String = ""
+    val description: String = "",
+    val printerTarget: String = "KASIR" // "KASIR", "KITCHEN", "BAR"
 )
 
 @Entity(tableName = "brands")
@@ -101,7 +102,9 @@ data class ProductEntity(
     val stock: Int,
     val minStock: Int = 5,
     val description: String = "",
-    val imageUrl: String = ""
+    val imageUrl: String = "",
+    val printerTarget: String = "KASIR", // "KASIR", "KITCHEN", "BAR"
+    val modifierOptions: String = "" // "Less Sugar, Normal Sugar, Less Ice"
 )
 
 @Entity(tableName = "currencies")
@@ -156,7 +159,25 @@ data class TransactionItemEntity(
     val productName: String,
     val price: Double,
     val quantity: Int,
-    val subtotal: Double
+    val subtotal: Double,
+    val selectedModifiers: String = ""
+)
+
+@Entity(tableName = "cashier_shifts")
+data class CashierShiftEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val userId: Long,
+    val cashierName: String,
+    val startTime: Long = System.currentTimeMillis(),
+    val endTime: Long? = null,
+    val startingCash: Double = 0.0,
+    val totalCashSales: Double = 0.0,
+    val totalNonCashSales: Double = 0.0,
+    val expectedCashInDrawer: Double = 0.0,
+    val actualCashInDrawer: Double = 0.0,
+    val cashDifference: Double = 0.0,
+    val notes: String = "",
+    val status: String = "OPEN"
 )
 
 @Entity(tableName = "receiving_notes")
