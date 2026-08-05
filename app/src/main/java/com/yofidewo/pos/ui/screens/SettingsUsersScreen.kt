@@ -1,5 +1,11 @@
 package com.yofidewo.pos.ui.screens
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.Settings
+import androidx.core.content.ContextCompat
 import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -1395,19 +1401,63 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
     var footerText by remember { mutableStateOf(viewModel.receiptFooter.value) }
 
     var isSearching by remember { mutableStateOf(false) }
+    var refreshKey by remember { mutableStateOf(0) }
     val selectedPrinterName by viewModel.selectedPrinterName.collectAsState()
     val selectedPrinterAddress by viewModel.selectedPrinterAddress.collectAsState()
 
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.values.all { it }
+        if (granted) {
+            isSearching = true
+            refreshKey++
+        } else {
+            Toast.makeText(context, "Izin Bluetooth diperlukan untuk memindai printer!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val bluetoothAdapter: android.bluetooth.BluetoothAdapter? = remember { android.bluetooth.BluetoothAdapter.getDefaultAdapter() }
-    val pairedDevices = remember(isSearching) {
+    val pairedDevices = remember(isSearching, refreshKey) {
         try {
             bluetoothAdapter?.bondedDevices?.map { "${it.name ?: "Printer BT"} (${it.address})" } ?: emptyList()
         } catch (e: Exception) {
             emptyList()
         }
     }
-    // Hanya tampilkan paired devices sungguhan — hapus mock
     val displayPrinters = pairedDevices
+
+    val onScanClick = {
+        val permissionsToRequest = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.BLUETOOTH_SCAN)
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.BLUETOOTH)
+            }
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.BLUETOOTH_ADMIN)
+            }
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            bluetoothPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled) {
+                try {
+                    val enableBtIntent = Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    context.startActivity(enableBtIntent)
+                } catch (_: Exception) {}
+            }
+            isSearching = !isSearching
+            refreshKey++
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -1431,7 +1481,7 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                         Text("Koneksi Printer Bluetooth Thermal", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "Mendukung seluruh printer thermal ESC/POS (XSERIES, BLUEPRINT, BTII, BTIIZ, Zjiang, Panda, Mobile Printer 58mm/80mm).",
+                            "Mendukung printer thermal ESC/POS hitam-putih ukuran 58mm (32 kolom) & 80mm (48 kolom).",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1478,40 +1528,79 @@ fun PrinterSettingsContent(viewModel: PosViewModel, onBack: () -> Unit = {}) {
                                 }
                             } else {
                                 Button(
-                                    onClick = { isSearching = !isSearching },
+                                    onClick = { onScanClick() },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Icon(Icons.Default.Search, contentDescription = null)
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(if (isSearching) "Sembunyikan Perangkat" else "Pindai Perangkat Bluetooth")
+                                    Text(if (isSearching) "Segarkan Daftar Bluetooth" else "Pindai Perangkat Bluetooth")
                                 }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedButton(
+                                onClick = {
+                                    try {
+                                        val intent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Silakan buka Pengaturan Bluetooth HP", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Bluetooth, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Buka Pengaturan Bluetooth HP (Pairing Printer Baru)", fontSize = 12.sp)
                             }
 
                             if (isSearching || selectedPrinterAddress.isBlank()) {
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Text("Pilih Printer Bluetooth Terpasang:", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                displayPrinters.forEach { pFull ->
-                                    val parts = pFull.split(" (")
-                                    val pName = parts[0]
-                                    val pAddress = if (parts.size > 1) parts[1].replace(")", "") else "00:11:22:33:44:55"
-
+                                if (displayPrinters.isEmpty()) {
                                     Card(
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
-                                            viewModel.setBluetoothPrinter(pName, pAddress)
-                                            isSearching = false
-                                            Toast.makeText(context, "Terhubung ke $pName", Toast.LENGTH_SHORT).show()
-                                        }
+                                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column {
-                                                Text(pName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                                Text(pAddress, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Text(
+                                                "Belum ada printer Bluetooth terdeteksi/terhubung.",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                "1. Pastikan Bluetooth HP & Printer Thermal 58mm/80mm Anda sudah NYALA.\n2. Klik 'Buka Pengaturan Bluetooth HP' di atas untuk Pairing dengan printer.\n3. Setelah Paired, tekan 'Pindai Perangkat Bluetooth' di atas.",
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    displayPrinters.forEach { pFull ->
+                                        val parts = pFull.split(" (")
+                                        val pName = parts[0]
+                                        val pAddress = if (parts.size > 1) parts[1].replace(")", "") else "00:11:22:33:44:55"
+
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
+                                                viewModel.setBluetoothPrinter(pName, pAddress)
+                                                isSearching = false
+                                                Toast.makeText(context, "Terhubung ke $pName", Toast.LENGTH_SHORT).show()
                                             }
-                                            Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column {
+                                                    Text(pName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                    Text(pAddress, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                }
+                                                Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                            }
                                         }
                                     }
                                 }
